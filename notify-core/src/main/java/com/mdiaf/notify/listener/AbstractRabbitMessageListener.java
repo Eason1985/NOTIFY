@@ -19,6 +19,7 @@ import java.util.Map;
 
 
 /**
+ *Just provide one listener per Topic and per messageType here.
  * Created by Eason on 15/9/26.
  */
 public abstract class AbstractRabbitMessageListener implements IMessageListener , InitializingBean {
@@ -41,7 +42,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     private volatile String queueName;
 
-    public void init(){
+    private void init(){
         Connection conn = connectionFactory.createConnection();
         final Channel channel = conn.createChannel(false);
 
@@ -115,10 +116,12 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
         //定义监听队列。
         Map<String , Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-routing-key" , groupId + ".DLQ");
-        arguments.put("x-dead-letter-exchange" , topic);
+        arguments.put("x-dead-letter-routing-key", groupId + ".DLQ");
+        arguments.put("x-dead-letter-exchange", topic);
         channel.queueDeclare(queueName, true, false, true, arguments);
         //设置监听队列
         channel.queueBind(queueName, topic, messageType);
+
+        init();
     }
 }

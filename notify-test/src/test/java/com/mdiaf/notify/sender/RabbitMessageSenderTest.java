@@ -23,9 +23,11 @@ public class RabbitMessageSenderTest extends BaseTest{
 
     @org.testng.annotations.Test
     public void testSend() throws Exception {
+        int i = 0;
         while (true){
-            ObjectMessage message = new ObjectMessage(new TestMessage(new Date()));
-            messageSender.expireSend(message, "eason-exchange", "eason_type_expire", 1000);
+            ObjectMessage message = new ObjectMessage(new TestMessage(new Date() , i++));
+            messageSender.send(message, "eason-exchange", "eason_type_expire");
+            messageSender.send(message, "eason-exchange", "eason_type_expire1");
             Thread.sleep(1000 * 5);
         }
     }

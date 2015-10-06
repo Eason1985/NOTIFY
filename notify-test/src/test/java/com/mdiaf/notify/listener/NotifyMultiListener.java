@@ -3,10 +3,9 @@ package com.mdiaf.notify.listener;
 import com.mdiaf.notify.message.IMessage;
 
 /**
- * Created by Eason on 15/10/5.
+ * Created by Eason on 15/10/6.
  */
-public class NotifyListener extends AbstractRabbitMessageListener {
-
+public class NotifyMultiListener extends AbstractRabbitMultiMessageListener {
     @Override
     public void handle(IMessage message) throws Exception {
         System.out.println("ok i am here.NotifyListener");
@@ -14,5 +13,4 @@ public class NotifyListener extends AbstractRabbitMessageListener {
         System.out.println(System.currentTimeMillis() - testMessage.getTime().getTime());
         System.out.println(testMessage);
     }
-
 }

@@ -17,17 +17,22 @@
         <property name="connectionFactory" ref="connectionFactory" />
     </bean>
 
-    <bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyListener" init-method="init">
-        <property name="connectionFactory" ref="connectionFactory" />
-        <property name="groupId" value="eason_test_group" />
-        <property name="messageType" value="eason_type_expire" />
-        <property name="topic" value="eason-exchange" />
-    </bean>
-
-    <bean id="notifyListener2" class="com.mdiaf.notify.listener.NotifyListener" init-method="init">
+    <bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyListener" >
         <property name="connectionFactory" ref="connectionFactory" />
         <property name="groupId" value="eason_test_group2" />
         <property name="messageType" value="eason_type_expire" />
         <property name="topic" value="eason-exchange" />
+    </bean>
+
+    <bean id="notifyListener2" class="com.mdiaf.notify.listener.NotifyMultiListener" >
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="groupId" value="eason_test_group2" />
+        <property name="topic" value="eason-exchange" />
+        <property name="messageTypes">
+            <array>
+                <value>eason_type_expire</value>
+                <value>eason_type_expire1</value>
+            </array>
+        </property>
     </bean>
 </beans>
