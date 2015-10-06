@@ -24,10 +24,10 @@
         <property name="topic" value="eason-exchange" />
     </bean>
 
-    <!--<bean id="notifyListener2" class="com.mdiaf.notify.listener.NotifyListener" init-method="init">-->
-        <!--<property name="connectionFactory" ref="connectionFactory" />-->
-        <!--<property name="groupId" value="eason_test_group2" />-->
-        <!--<property name="messageType" value="eason_test_messageType" />-->
-        <!--<property name="topic" value="eason-exchange" />-->
-    <!--</bean>-->
+    <bean id="notifyListener2" class="com.mdiaf.notify.listener.NotifyListener" init-method="init">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="groupId" value="eason_test_group2" />
+        <property name="messageType" value="eason_type_expire" />
+        <property name="topic" value="eason-exchange" />
+    </bean>
 </beans>
