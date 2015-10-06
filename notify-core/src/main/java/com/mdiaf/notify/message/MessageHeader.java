@@ -1,5 +1,8 @@
 package com.mdiaf.notify.message;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +52,7 @@ public class MessageHeader implements Serializable{
     }
 
     public void setProperty(String key , Object value){
-        this.properties.put(key , value);
+        this.properties.put(key, value);
     }
 
     public void setProperties(Map properties){
@@ -91,6 +94,7 @@ public class MessageHeader implements Serializable{
                 ", type='" + type + '\'' +
                 ", uniqueId='" + uniqueId + '\'' +
                 ", redeliver=" + redeliver +
+                ", messageId='" + messageId + '\'' +
                 ", properties=" + properties +
                 '}';
     }
@@ -101,24 +105,26 @@ public class MessageHeader implements Serializable{
 
         if (o == null || getClass() != o.getClass()) return false;
 
-        MessageHeader that = (MessageHeader) o;
+        MessageHeader header = (MessageHeader) o;
 
-        return new org.apache.commons.lang3.builder.EqualsBuilder()
-                .append(redeliver, that.redeliver)
-                .append(topic, that.topic)
-                .append(type, that.type)
-                .append(uniqueId, that.uniqueId)
-                .append(properties, that.properties)
+        return new EqualsBuilder()
+                .append(redeliver, header.redeliver)
+                .append(topic, header.topic)
+                .append(type, header.type)
+                .append(uniqueId, header.uniqueId)
+                .append(messageId, header.messageId)
+                .append(properties, header.properties)
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new org.apache.commons.lang3.builder.HashCodeBuilder(17, 37)
+        return new HashCodeBuilder(17, 37)
                 .append(topic)
                 .append(type)
                 .append(uniqueId)
                 .append(redeliver)
+                .append(messageId)
                 .append(properties)
                 .toHashCode();
     }

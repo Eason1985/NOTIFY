@@ -2,8 +2,11 @@ package com.mdiaf.notify.sender;
 
 
 import com.mdiaf.notify.BaseTest;
-import com.mdiaf.notify.message.StringMessage;
+import com.mdiaf.notify.listener.TestMessage;
+import com.mdiaf.notify.message.ObjectMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Date;
 
 /**
  * Created by Eason on 15/10/4.
@@ -21,11 +24,9 @@ public class RabbitMessageSenderTest extends BaseTest{
     @org.testng.annotations.Test
     public void testSend() throws Exception {
         while (true){
-            StringMessage message = new StringMessage("hello world!");
-            messageSender.send(message, "eason-exchange", "eason_test_messageType");
-
-            Thread.sleep(1000*5);
-            System.out.println("aaaa");
+            ObjectMessage message = new ObjectMessage(new TestMessage(new Date()));
+            messageSender.expireSend(message, "eason-exchange", "eason_type_expire", 1000);
+            Thread.sleep(1000 * 5);
         }
     }
 
@@ -33,4 +34,5 @@ public class RabbitMessageSenderTest extends BaseTest{
     public void testExpireSend() throws Exception {
 
     }
+
 }

@@ -9,11 +9,9 @@ public class NotifyListener extends AbstractRabbitMessageListener {
 
     @Override
     public void handle(IMessage message) throws Exception {
-        System.out.println("ok i am here.NotifyListener:"+message.getBody());
-        throw new Exception("test exception");
+        System.out.println("ok i am here.NotifyListener");
+        TestMessage testMessage = (TestMessage) message.getBody();
+        System.out.println(System.currentTimeMillis() - testMessage.getTime().getTime());
     }
 
-    public static void main(String[] args) {
-
-    }
 }

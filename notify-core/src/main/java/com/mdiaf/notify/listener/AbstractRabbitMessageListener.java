@@ -39,13 +39,16 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
      */
     private volatile String groupId;
 
+    private volatile String queueName;
+
     public void init(){
         Connection conn = connectionFactory.createConnection();
         final Channel channel = conn.createChannel(false);
 
         try {
+            channel.basicQos(1);// 均衡投递
             //设置队列listener
-            channel.basicConsume(groupId, false,
+            channel.basicConsume(queueName, false,
                 new DefaultConsumer(channel) {
                     @Override
                     public void handleDelivery(String consumerTag,
@@ -67,7 +70,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                                 channel.basicReject(deliveryTag, false);
                                 return;
                             }
-                            logger.warn("message handler error,requeue it.", e.getMessage());
+                            logger.warn("message handler error,requeue it.", e);
                             channel.basicNack(deliveryTag, false, true);
                             return;
                         }
@@ -99,7 +102,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        String queueName = groupId + "." + messageType;
+        queueName = groupId + "." + messageType;
         if (StringUtils.isBlank(topic) || StringUtils.isBlank(messageType) || StringUtils.isBlank(groupId)){
             throw new Exception("missing parameters in your messageListener config");
         }
@@ -107,15 +110,14 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         Connection conn = connectionFactory.createConnection();
         final Channel channel = conn.createChannel(true);
         //给监听的队列声明一个死信队列
-        channel.queueDeclare(queueName + ".DLQ", true, false, false, null);
-        //把死信队列绑在同一个topic下面
+        channel.queueDeclare(queueName + ".DLQ", true, false, true, null);
         channel.queueBind(queueName + ".DLQ", topic, queueName + ".DLQ");
 
         //定义监听队列。
         Map<String , Object> arguments = new HashMap<>();
         arguments.put("x-dead-letter-routing-key" , groupId + ".DLQ");
         arguments.put("x-dead-letter-exchange" , topic);
-        channel.queueDeclare(queueName, true, false, false, arguments);
+        channel.queueDeclare(queueName, true, false, true, arguments);
         //设置监听队列
         channel.queueBind(queueName, topic, messageType);
     }

@@ -25,7 +25,6 @@ public class RabbitMessageSender implements IMessageSender {
         Channel channel = conn.createChannel(false);
         channel.basicPublish(topic, messageType, true, RabbitMQPropertiesConverter.fromMessage(message), message.toBytes());
         channel.addReturnListener(new InternalListener(returnListener));
-//        channel.txCommit();
     }
 
     @Override
