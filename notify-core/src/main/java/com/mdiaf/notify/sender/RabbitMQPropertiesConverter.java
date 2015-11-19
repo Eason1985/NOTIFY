@@ -75,7 +75,6 @@ public class RabbitMQPropertiesConverter {
         message.getHeader().setMessageId(properties.getMessageId());
         message.getHeader().setTopic(envelope.getExchange());
         message.getHeader().setType(envelope.getRoutingKey());
-        message.getHeader().setRedeliver(envelope.isRedeliver());
         return message;
     }
 }

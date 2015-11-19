@@ -19,9 +19,11 @@ public class MessageHeader implements Serializable{
 
     private String type;
 
+    private String groupId;
+
     private String uniqueId;
 
-    private boolean redeliver;
+    private long deliveredTag;
 
     private String messageId;
 
@@ -71,14 +73,6 @@ public class MessageHeader implements Serializable{
         return uniqueId;
     }
 
-    public boolean isRedeliver() {
-        return redeliver;
-    }
-
-    public void setRedeliver(boolean redeliver) {
-        this.redeliver = redeliver;
-    }
-
     public String getMessageId() {
         return messageId;
     }
@@ -87,13 +81,20 @@ public class MessageHeader implements Serializable{
         this.messageId = messageId;
     }
 
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
     @Override
     public String toString() {
         return "MessageHeader{" +
                 "topic='" + topic + '\'' +
                 ", type='" + type + '\'' +
                 ", uniqueId='" + uniqueId + '\'' +
-                ", redeliver=" + redeliver +
                 ", messageId='" + messageId + '\'' +
                 ", properties=" + properties +
                 '}';
@@ -108,7 +109,6 @@ public class MessageHeader implements Serializable{
         MessageHeader header = (MessageHeader) o;
 
         return new EqualsBuilder()
-                .append(redeliver, header.redeliver)
                 .append(topic, header.topic)
                 .append(type, header.type)
                 .append(uniqueId, header.uniqueId)
@@ -117,13 +117,21 @@ public class MessageHeader implements Serializable{
                 .isEquals();
     }
 
+    public long getDeliveredTag() {
+        return deliveredTag;
+    }
+
+    public void setDeliveredTag(long deliveredTag) {
+        this.deliveredTag = deliveredTag;
+    }
+
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(topic)
                 .append(type)
+
                 .append(uniqueId)
-                .append(redeliver)
                 .append(messageId)
                 .append(properties)
                 .toHashCode();

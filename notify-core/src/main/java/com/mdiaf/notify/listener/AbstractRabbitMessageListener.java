@@ -59,7 +59,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                             throws IOException
                     {
                         long deliveryTag = envelope.getDeliveryTag();
-
+                        logger.debug("deliveryTag:"+deliveryTag );
+                        logger.debug("consumerTag:"+consumerTag);
                         try {
                             IMessage message = RabbitMQPropertiesConverter.toMessage(properties , body , envelope);
                             AbstractRabbitMessageListener.this.handle(message);

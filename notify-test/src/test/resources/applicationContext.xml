@@ -10,6 +10,7 @@
                                host="172.16.1.113"
                                username="dev"
                                password="devnfs"
+                               channel-cache-size="1"
             />
 
 
@@ -17,12 +18,12 @@
         <property name="connectionFactory" ref="connectionFactory" />
     </bean>
 
-    <bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyListener" >
-        <property name="connectionFactory" ref="connectionFactory" />
-        <property name="groupId" value="eason_test_group2" />
-        <property name="messageType" value="eason_type_expire" />
-        <property name="topic" value="eason-exchange" />
-    </bean>
+    <!--<bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyListener" >-->
+        <!--<property name="connectionFactory" ref="connectionFactory" />-->
+        <!--<property name="groupId" value="eason_test_group2" />-->
+        <!--<property name="messageType" value="eason_type_expire" />-->
+        <!--<property name="topic" value="eason-exchange" />-->
+    <!--</bean>-->
 
     <bean id="notifyListener2" class="com.mdiaf.notify.listener.NotifyMultiListener" >
         <property name="connectionFactory" ref="connectionFactory" />

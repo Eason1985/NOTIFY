@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class ObjectMessage implements IMessage {
 
     private static final long serialVersionUID = 9054303586749629129L;
-    private byte[] body;
+    private final byte[] body;
 
     private MessageHeader header;
 

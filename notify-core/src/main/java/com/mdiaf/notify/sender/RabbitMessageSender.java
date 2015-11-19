@@ -3,6 +3,9 @@ package com.mdiaf.notify.sender;
 import com.mdiaf.notify.message.IMessage;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 
@@ -15,16 +18,24 @@ import java.util.Map;
  */
 public class RabbitMessageSender implements IMessageSender {
 
+    private final static Logger logger = LoggerFactory.getLogger(IMessageSender.class);
+    //todo create it by myself one day
     private ConnectionFactory connectionFactory;
+
+    private Channel channel;
 
     private volatile ReturnListener returnListener = new DefaultReturnListener();
 
     @Override
     public void send(IMessage message, String topic, String messageType) throws IOException {
-        Connection conn = connectionFactory.createConnection();
-        Channel channel = conn.createChannel(false);
+
         channel.basicPublish(topic, messageType, true, RabbitMQPropertiesConverter.fromMessage(message), message.toBytes());
-        channel.addReturnListener(new InternalListener(returnListener));
+        try {
+            channel.waitForConfirmsOrDie();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        logger.debug("send channel:"+channel.getChannelNumber() + " seqNo:" + channel.getNextPublishSeqNo());
     }
 
     @Override
@@ -50,22 +61,26 @@ public class RabbitMessageSender implements IMessageSender {
 
     public void setConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
+        Connection conn = connectionFactory.createConnection();
+        channel = conn.createChannel(false);
+        try {
+            channel.confirmSelect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        channel.addReturnListener(new InternalListener(returnListener));
+        channel.addConfirmListener(new ConfirmListener() {
+            @Override
+            public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+                logger.debug("confirm deliveryTag:" + deliveryTag);
+            }
+
+            @Override
+            public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+
+            }
+        });
     }
 
-    private class InternalListener implements com.rabbitmq.client.ReturnListener {
 
-        private ReturnListener listener ;
-
-        public InternalListener(ReturnListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public void handleReturn(int replyCode, String replyText, String exchange, String routingKey, AMQP.BasicProperties properties, byte[] body) throws IOException {
-            IMessage message = RabbitMQPropertiesConverter.toMessage(properties , body);
-            message.getHeader().setTopic(exchange);
-            message.getHeader().setType(routingKey);
-            listener.handleReturn(replyCode , replyText , message);
-        }
-    }
 }
