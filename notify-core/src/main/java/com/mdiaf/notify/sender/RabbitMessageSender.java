@@ -24,8 +24,6 @@ public class RabbitMessageSender implements IMessageSender {
 
     private Channel channel;
 
-    private volatile ReturnListener returnListener = new DefaultReturnListener();
-
     @Override
     public void send(IMessage message, String topic, String messageType) throws IOException {
 
@@ -51,12 +49,6 @@ public class RabbitMessageSender implements IMessageSender {
         //定义一个延迟queue,auto delete 如果消费者都不订阅了，queue还有没有存在的必要？ todo
         channel.queueDeclare(delayMessageType, true, false, true, args);
         channel.basicPublish("" , delayMessageType , true, RabbitMQPropertiesConverter.fromMessage(message), message.toBytes()); //发送消息到延迟queue
-        channel.addReturnListener(new InternalListener(returnListener));
-    }
-
-    @Override
-    public void setReturnListener(ReturnListener returnListener) {
-        this.returnListener = returnListener;
     }
 
     public void setConnectionFactory(ConnectionFactory connectionFactory) {
@@ -68,7 +60,6 @@ public class RabbitMessageSender implements IMessageSender {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        channel.addReturnListener(new InternalListener(returnListener));
         channel.addConfirmListener(new ConfirmListener() {
             @Override
             public void handleAck(long deliveryTag, boolean multiple) throws IOException {

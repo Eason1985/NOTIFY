@@ -43,10 +43,10 @@ public class RabbitChannel implements IChannel {
         return new RabbitChannel(conn, configuration);
     }
 
-    public static void freeChannel(IChannel channel) {
+    public void free() {
         synchronized (CHANNELS) {
-            if (!CHANNELS.contains(channel)) {
-                CHANNELS.add(channel);
+            if (!CHANNELS.contains(this)) {
+                CHANNELS.add(this);
             }
         }
     }
@@ -100,6 +100,26 @@ public class RabbitChannel implements IChannel {
     @Override
     public boolean isOpen() {
         return false;
+    }
+
+    @Override
+    public String getNoConfirmMessageUniqueId(long deliveryTag) {
+        return null;
+    }
+
+    @Override
+    public void confirmAck(long deliveryTag) {
+
+    }
+
+    @Override
+    public void send(IMessage message, String topic, String messageType) throws IOException {
+
+    }
+
+    @Override
+    public void expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
+
     }
 
     private class InternalReturnListener implements com.rabbitmq.client.ReturnListener {

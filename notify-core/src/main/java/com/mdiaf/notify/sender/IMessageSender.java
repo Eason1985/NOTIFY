@@ -29,10 +29,4 @@ public interface IMessageSender {
      */
     void expireSend(IMessage message, String topic, String messageType, long delay) throws IOException;
 
-    /**
-     * if the message is delivered fault,then the returnListener will be invoke. <p>
-     * do nothing default.
-     * @param returnListener
-     */
-    void setReturnListener(ReturnListener returnListener);
 }
