@@ -2,6 +2,8 @@ package com.mdiaf.notify.sender;
 
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.store.IMessageStore;
+import com.mdiaf.notify.store.JDBCTemplateFactory;
+import com.mdiaf.notify.store.ProducerMessageStroe;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConfirmListener;
@@ -63,6 +65,6 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
+        messageStore = new ProducerMessageStroe(JDBCTemplateFactory.LOCAL.getJdbcTemplate());
     }
 }
