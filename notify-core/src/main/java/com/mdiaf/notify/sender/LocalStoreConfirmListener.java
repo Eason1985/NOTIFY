@@ -7,19 +7,20 @@ import java.io.IOException;
 /**
  * Created by Eason on 15/11/19.
  */
-public class LocalStoreConfirmListener implements com.rabbitmq.client.ConfirmListener {
+public class LocalStoreConfirmListener implements ConfirmListener {
 
     private IChannel channel;
 
     private IMessageStore messageStore;
 
+
     @Override
-    public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+    public void handleAck(String msgUnique) throws IOException {
 
     }
 
     @Override
-    public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+    public void handleNack(String msgUnique) throws IOException {
 
     }
 }

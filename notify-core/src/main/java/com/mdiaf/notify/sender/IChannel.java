@@ -7,7 +7,5 @@ public interface IChannel extends IMessageSender{
 
     boolean isOpen();
 
-    String getNoConfirmMessageUniqueId(long deliveryTag);
-
-    void confirmAck(long deliveryTag);
+    void free();
 }

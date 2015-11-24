@@ -1,6 +1,6 @@
 package com.mdiaf.notify.sender;
 
-import com.mdiaf.notify.message.IMessage;
+import com.mdiaf.notify.store.LocalStoreException;
 
 import java.io.IOException;
 
@@ -9,9 +9,9 @@ import java.io.IOException;
  */
 public interface ConfirmListener {
 
-    void handleAck(IMessage message)
-            throws IOException;
+    void handleAck(String msgUnique)
+            throws LocalStoreException;
 
-    void handleNack(IMessage message)
-            throws IOException;
+    void handleNack(String msgUnique)
+            throws LocalStoreException;
 }
