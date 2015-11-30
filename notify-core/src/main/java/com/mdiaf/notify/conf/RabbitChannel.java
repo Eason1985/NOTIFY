@@ -1,7 +1,8 @@
-package com.mdiaf.notify.sender;
+package com.mdiaf.notify.conf;
 
 import com.mdiaf.notify.message.IMessage;
-import com.rabbitmq.client.AMQP;
+import com.mdiaf.notify.sender.IConfirmListener;
+import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
 import com.rabbitmq.client.Channel;
 
 import org.apache.commons.lang3.StringUtils;
@@ -55,6 +56,17 @@ public class RabbitChannel implements IChannel {
         }
     }
 
+    @Override
+    public void close() {
+        try {
+            delegate.close();
+            noConfirms.clear();
+        } catch (IOException e) {
+            logger.warn("[NOTIFY]%s", e.getMessage());
+        }
+
+    }
+
     private RabbitChannel(Connection conn, Configuration configuration) throws IOException {
         this.conn = conn;
         this.delegate = conn.createChannel(false);
@@ -64,7 +76,6 @@ public class RabbitChannel implements IChannel {
 
     private void initDelegate() throws IOException {
         delegate.confirmSelect();
-        delegate.addReturnListener(new InternalReturnListener(configuration.getReturnListener()));
         delegate.addConfirmListener(new InternalConfirmListener(configuration.getConfirmListener()));
     }
 
@@ -115,28 +126,11 @@ public class RabbitChannel implements IChannel {
         noConfirms.put(delegate.getNextPublishSeqNo() - 1, message.getHeader().getUniqueId());
     }
 
-    private class InternalReturnListener implements com.rabbitmq.client.ReturnListener {
-
-        private ReturnListener listener ;
-
-        public InternalReturnListener(ReturnListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public void handleReturn(int replyCode, String replyText, String exchange, String routingKey, AMQP.BasicProperties properties, byte[] body) throws IOException {
-            IMessage message = RabbitMQPropertiesConverter.toMessage(properties , body);
-            message.getHeader().setTopic(exchange);
-            message.getHeader().setType(routingKey);
-            listener.handleReturn(replyCode , replyText , message);
-        }
-    }
-
     private class InternalConfirmListener implements com.rabbitmq.client.ConfirmListener {
 
-        private ConfirmListener confirmListener;
+        private IConfirmListener confirmListener;
 
-        public InternalConfirmListener(ConfirmListener confirmListener) {
+        public InternalConfirmListener(IConfirmListener confirmListener) {
             this.confirmListener = confirmListener;
         }
 
@@ -145,6 +139,7 @@ public class RabbitChannel implements IChannel {
             String uniqueId = noConfirms.get(deliveryTag);
             if (StringUtils.isBlank(uniqueId)) {
                 logger.warn("[NOTIFY]uniqueId:%s not in the noConfirms.", uniqueId);
+                return;
             }
             confirmListener.handleAck(uniqueId);
             noConfirms.remove(deliveryTag);
@@ -155,9 +150,10 @@ public class RabbitChannel implements IChannel {
             String uniqueId = noConfirms.get(deliveryTag);
             if (StringUtils.isBlank(uniqueId)) {
                 logger.warn("[NOTIFY]uniqueId:%s not in the noConfirms.", uniqueId);
+                return;
             }
             confirmListener.handleNack(uniqueId);
-            logger.warn("[NOTIFY]uniqueId:%s delivery fault.");
+            noConfirms.remove(deliveryTag);
         }
     }
 }

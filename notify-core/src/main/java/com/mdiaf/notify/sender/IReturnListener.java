@@ -10,10 +10,7 @@ import java.io.IOException;
  * do nothing default.
  * Created by Eason on 15/9/26.
  */
-public interface ReturnListener {
+public interface IReturnListener {
 
-    void handleReturn(int replyCode,
-                      String replyText,
-                      IMessage message)
-            throws IOException;
+    void handleReturn(IMessage message);
 }

@@ -4,6 +4,8 @@ import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.message.ObjectMessage;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.SQLException;
+
 /**
  * Created by Eason on 15/11/16.
  */
@@ -22,7 +24,7 @@ public class MessageStoreTest {
     public void testSave() throws Exception {
         String msg = "hello world";
         IMessage message = new ObjectMessage(msg);
-        messageStore.save(message);
+        messageStore.saveOrUpdate(message);
     }
 
     @org.testng.annotations.Test

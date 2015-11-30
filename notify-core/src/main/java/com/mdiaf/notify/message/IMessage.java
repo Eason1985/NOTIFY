@@ -26,7 +26,7 @@ public interface IMessage extends Serializable{
     Object getBody();
 
     /**
-     * @return bytes of the body
+     * @return bytes of this object
      */
     byte[] toBytes() ;
 

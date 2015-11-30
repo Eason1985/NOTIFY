@@ -1,16 +1,15 @@
 package com.mdiaf.notify.store;
 
-import com.mdiaf.notify.message.IMessage;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.List;
+import java.sql.SQLException;
 
 /**
  * Created by Eason on 15/11/13.
  */
 public class ConsumerMessageStore extends AbstractMessageStore {
 
-    private final String tableName = "consumer";
+    private final static String tableName = "consumer";
 
     public ConsumerMessageStore(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
@@ -20,4 +19,5 @@ public class ConsumerMessageStore extends AbstractMessageStore {
     String getTableName() {
         return tableName;
     }
+
 }

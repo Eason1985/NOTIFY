@@ -27,6 +27,8 @@ public class MessageHeader implements Serializable{
 
     private String messageId;
 
+    private long delay;
+
     private final Map<String, Object> properties = new HashMap<String, Object>();
 
     public MessageHeader() {
@@ -51,6 +53,14 @@ public class MessageHeader implements Serializable{
 
     public String getType() {
         return type;
+    }
+
+    public long getDelay() {
+        return delay;
+    }
+
+    public void setDelay(long delay) {
+        this.delay = delay;
     }
 
     public void setProperty(String key , Object value){

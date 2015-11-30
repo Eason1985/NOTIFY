@@ -5,11 +5,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * Created by Eason on 15/11/13.
  */
-public class ProducerMessageStroe extends AbstractMessageStore  {
+public class ProducerMessageStore extends AbstractMessageStore  {
 
-    private final String tableName = "producer";
+    private final static String tableName = "producer";
 
-    public ProducerMessageStroe(JdbcTemplate jdbcTemplate) {
+    public ProducerMessageStore(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
     }
 
@@ -17,4 +17,5 @@ public class ProducerMessageStroe extends AbstractMessageStore  {
     String getTableName() {
         return tableName;
     }
+
 }

@@ -5,16 +5,14 @@ import com.mdiaf.notify.message.IMessage;
 import java.io.IOException;
 
 /**
- * 两种角色：消息生产者、消息消费者
- * 一种消息可以有多个订阅者
- *
- *topic + messageType 唯一确认一种消息
  *
  * Created by Eason on 15/9/11.
  */
 public interface IMessageSender {
     /**
-     *
+     * step1:save message
+     * step2:send it
+     * step3:delete it when confirmed
      * @param message
      * @param topic  as exchange , make sure the topic exist in RabbitMQ , before you invoke this method.
      * @param messageType as routingKey
@@ -22,6 +20,9 @@ public interface IMessageSender {
     void send(IMessage message, String topic, String messageType) throws IOException;
 
     /**
+     * step1:save message
+     * step2:send it
+     * step3:delete it when confirmed
      * @param message
      * @param topic as exchange , as exchange , make sure the topic exist in RabbitMQ , before you invoke this method.
      * @param messageType as routingKey

@@ -1,11 +1,12 @@
 package com.mdiaf.notify.listener;
 
+import com.mdiaf.notify.conf.Configuration;
 import com.mdiaf.notify.message.IMessage;
-import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
-import com.rabbitmq.client.AMQP;
+import com.mdiaf.notify.store.ConsumerMessageStore;
+import com.mdiaf.notify.store.IMessageStore;
+import com.mdiaf.notify.store.JDBCTemplateFactory;
+import com.mdiaf.notify.store.MessageWrapper;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,8 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -27,6 +28,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     private final static Logger logger = LoggerFactory.getLogger(IMessageListener.class);
 
     private ConnectionFactory connectionFactory;
+
+    private IMessageStore messageStore;
     /**
      * as exchange
      */
@@ -40,51 +43,19 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
      */
     private volatile String groupId;
 
-    private volatile String queueName;
+    private volatile Channel channel;
 
-    private void init(){
-        Connection conn = connectionFactory.createConnection();
-        final Channel channel = conn.createChannel(false);
+    private Timer timer;
+    private final static AtomicInteger NUMBER = new AtomicInteger(0);
 
-        try {
-            channel.basicQos(1);// 均衡投递
-            //设置队列listener
-            channel.basicConsume(queueName, false,
-                new DefaultConsumer(channel) {
-                    @Override
-                    public void handleDelivery(String consumerTag,
-                                               Envelope envelope,
-                                               AMQP.BasicProperties properties,
-                                               byte[] body)
-                            throws IOException
-                    {
-                        long deliveryTag = envelope.getDeliveryTag();
-                        logger.debug("deliveryTag:"+deliveryTag );
-                        logger.debug("consumerTag:"+consumerTag);
-                        try {
-                            IMessage message = RabbitMQPropertiesConverter.toMessage(properties , body , envelope);
-                            AbstractRabbitMessageListener.this.handle(message);
-                        } catch (Exception e) {
-                            if (envelope.isRedeliver()){
-                                if (logger.isDebugEnabled()){
-                                    logger.debug("deliveryTag:"+deliveryTag + " isRedeliver,reject now!");
-                                }
-                                channel.basicReject(deliveryTag, false);
-                                return;
-                            }
-                            logger.warn("message handler error,requeue it.", e);
-                            channel.basicNack(deliveryTag, false, true);
-                            return;
-                        }
+    private Configuration configuration;
 
-                        channel.basicAck(deliveryTag , false);
-                    }
-                });
-        } catch (IOException e) {
-            logger.warn("[MessageListener init error]topic="+topic,e);
-        }
-
-    }
+    /**
+     * local or remote
+     */
+    private final static String MODE_LOCAL = "local";
+    private final static String MODE_REMOTE = "remote";
+    private String mode = MODE_LOCAL;//default is local
 
     public void setTopic(String topic) {
         this.topic = topic;
@@ -104,13 +75,51 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        queueName = groupId + "." + messageType;
         if (StringUtils.isBlank(topic) || StringUtils.isBlank(messageType) || StringUtils.isBlank(groupId)){
             throw new Exception("missing parameters in your messageListener config");
         }
 
+        setMessageStore();
+        setChannel();
+        //if this.channel close, timer can reopen it .
+        setTimer();
+    }
+
+    private void setTimer(){
+        synchronized (NUMBER) {
+            NUMBER.incrementAndGet();
+            timer = new Timer("messageListener-"+NUMBER.intValue(), true);
+        }
+
+        timer.schedule(new HeartbeatTimer(), 3*60*1000, 3*1000);
+        timer.schedule(new ListenerTimer(), 3*60*1000, 60*1000);
+    }
+
+    private void setMessageStore() {
+        if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
+            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate());
+        }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
+            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate());
+        }else {
+            throw new RuntimeException("mode must in (local, remote)");
+        }
+    }
+
+    public void setMode(String mode) {
+        if (StringUtils.isBlank(mode)) {
+            return;
+        }
+        this.mode = mode;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    private void setChannel() throws IOException {
+        String queueName = groupId + "." + messageType;
         Connection conn = connectionFactory.createConnection();
-        final Channel channel = conn.createChannel(true);
+        channel = conn.createChannel(false);
         //给监听的队列声明一个死信队列
         channel.queueDeclare(queueName + ".DLQ", true, false, true, null);
         channel.queueBind(queueName + ".DLQ", topic, queueName + ".DLQ");
@@ -122,7 +131,49 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         channel.queueDeclare(queueName, true, false, true, arguments);
         //设置监听队列
         channel.queueBind(queueName, topic, messageType);
+        channel.basicQos(1);// 均衡投递
+        channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this));
+    }
 
-        init();
+    private class HeartbeatTimer extends TimerTask {
+
+        @Override
+        public void run() {
+            try {
+                if (!channel.isOpen()) {
+                    setChannel();
+                }
+            }catch (Exception e) {
+                logger.error("[NOTIFY]HeartbeatTimer error.", e);
+            }
+        }
+    }
+
+    private class ListenerTimer extends TimerTask {
+
+        @Override
+        public void run() {
+            try {
+                List<IMessage> messageList = AbstractRabbitMessageListener.this.messageStore.
+                        findMomentBefore(AbstractRabbitMessageListener.this.configuration.getResendPeriod());
+                for (IMessage message : messageList) {
+                    if (message instanceof MessageWrapper) {
+                        MessageWrapper wrapper = (MessageWrapper) message;
+                        if (wrapper.getCount() >= AbstractRabbitMessageListener.this.configuration.getMaxResend()) {
+                            AbstractRabbitMessageListener.this.configuration.getReturnListener().handleReturn(message);
+                            AbstractRabbitMessageListener.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
+                            return;
+                        }
+
+                        handle(message);
+                        messageStore.saveOrUpdate(message);
+                    }else {
+                        //todo
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("[NOTIFY]sendTimer error.", e);
+            }
+        }
     }
 }

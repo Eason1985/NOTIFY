@@ -10,10 +10,16 @@ import java.util.List;
  */
 public interface IMessageStore {
 
-    void save(IMessage message) throws SQLException;
+    void saveOrUpdate(IMessage message) throws SQLException;
 
-    void delete(IMessage message);
+    void deleteByUniqueId(String uniqueId) throws SQLException;
 
-    List findALL();
+    /**
+     * find out some message which be send sometime before.
+     * @param seconds
+     * @return
+     * @throws SQLException
+     */
+    List<IMessage> findMomentBefore(long seconds) throws SQLException;
 
 }

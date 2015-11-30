@@ -73,8 +73,6 @@ public class RabbitMQPropertiesConverter {
     public static IMessage toMessage(AMQP.BasicProperties properties , byte[] bytes , Envelope envelope){
         IMessage message = (IMessage) SerializationUtils.deserialize(bytes);
         message.getHeader().setMessageId(properties.getMessageId());
-        message.getHeader().setTopic(envelope.getExchange());
-        message.getHeader().setType(envelope.getRoutingKey());
         return message;
     }
 }

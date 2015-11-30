@@ -1,26 +1,38 @@
 package com.mdiaf.notify.sender;
 
 import com.mdiaf.notify.store.IMessageStore;
+import com.mdiaf.notify.store.LocalStoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * Created by Eason on 15/11/19.
  */
-public class LocalStoreConfirmListener implements ConfirmListener {
+public class LocalStoreConfirmListener implements IConfirmListener {
 
-    private IChannel channel;
+    private static final Logger logger = LoggerFactory.getLogger(IConfirmListener.class);
 
     private IMessageStore messageStore;
 
-
-    @Override
-    public void handleAck(String msgUnique) throws IOException {
-
+    public LocalStoreConfirmListener(IMessageStore messageStore) {
+        this.messageStore = messageStore;
     }
 
     @Override
-    public void handleNack(String msgUnique) throws IOException {
+    public void handleAck(String msgUnique) throws LocalStoreException {
+        try {
+            messageStore.deleteByUniqueId(msgUnique);
+            // if handleAck fault,we will resend this message again by a timer.
+        } catch (SQLException e) {
+            logger.warn("[NOTIFY]handleAck fault.cause:"+e.getErrorCode(), e);
+            throw new LocalStoreException(e);
+        }
+    }
 
+    @Override
+    public void handleNack(String msgUnique) throws LocalStoreException {
+        logger.warn("[NOTIFY]message:%s send fault,and resend later.");
     }
 }
