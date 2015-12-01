@@ -68,6 +68,7 @@ public class DefaultConsumer implements Consumer {
             }
 
             message = RabbitMQPropertiesConverter.toMessage(properties, body, envelope);
+            message.getHeader().setMessageId(properties.getMessageId());
             messageStore.saveOrUpdate(message);
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {

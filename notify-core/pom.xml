@@ -5,12 +5,12 @@
     <parent>
         <artifactId>notify</artifactId>
         <groupId>com.aiaf</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>notify-core</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -53,6 +53,5 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-
-   </dependencies>
+    </dependencies>
 </project>

@@ -62,7 +62,7 @@ public class RabbitChannel implements IChannel {
             delegate.close();
             noConfirms.clear();
         } catch (IOException e) {
-            logger.warn("[NOTIFY]%s", e.getMessage());
+            logger.warn("[NOTIFY]{}", e.getMessage());
         }
 
     }
@@ -138,7 +138,7 @@ public class RabbitChannel implements IChannel {
         public void handleAck(long deliveryTag, boolean multiple) throws IOException {
             String uniqueId = noConfirms.get(deliveryTag);
             if (StringUtils.isBlank(uniqueId)) {
-                logger.warn("[NOTIFY]uniqueId:%s not in the noConfirms.", uniqueId);
+                logger.warn("[NOTIFY]uniqueId:{} not in the noConfirms.", uniqueId);
                 return;
             }
             confirmListener.handleAck(uniqueId);
@@ -149,7 +149,7 @@ public class RabbitChannel implements IChannel {
         public void handleNack(long deliveryTag, boolean multiple) throws IOException {
             String uniqueId = noConfirms.get(deliveryTag);
             if (StringUtils.isBlank(uniqueId)) {
-                logger.warn("[NOTIFY]uniqueId:%s not in the noConfirms.", uniqueId);
+                logger.warn("[NOTIFY]uniqueId:{} not in the noConfirms.", uniqueId);
                 return;
             }
             confirmListener.handleNack(uniqueId);

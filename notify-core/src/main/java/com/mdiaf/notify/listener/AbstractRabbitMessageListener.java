@@ -27,28 +27,28 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     private final static Logger logger = LoggerFactory.getLogger(IMessageListener.class);
 
-    private ConnectionFactory connectionFactory;
+    protected ConnectionFactory connectionFactory;
 
     private IMessageStore messageStore;
     /**
      * as exchange
      */
-    private volatile String topic;
+    protected volatile String topic;
     /**
      * as routing key
      */
-    private volatile String messageType;
+    protected volatile String messageType;
     /**
      * as queue name
      */
-    private volatile String groupId;
+    protected volatile String groupId;
 
     private volatile Channel channel;
 
     private Timer timer;
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
 
-    private Configuration configuration;
+    protected Configuration configuration;
 
     /**
      * local or remote
@@ -81,6 +81,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
         setMessageStore();
         setChannel();
+        setConsumer();
         //if this.channel close, timer can reopen it .
         setTimer();
     }
@@ -91,8 +92,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             timer = new Timer("messageListener-"+NUMBER.intValue(), true);
         }
 
-        timer.schedule(new HeartbeatTimer(), 3*60*1000, 3*1000);
-        timer.schedule(new ListenerTimer(), 3*60*1000, 60*1000);
+        timer.schedule(new HeartbeatTimer(), 3 * 60 * 1000, 3 * 1000);
+        timer.schedule(new ListenerTimer(), 3 * 60 * 1000, 60 * 1000);
     }
 
     private void setMessageStore() {
@@ -131,6 +132,11 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         channel.queueDeclare(queueName, true, false, true, arguments);
         //设置监听队列
         channel.queueBind(queueName, topic, messageType);
+
+    }
+
+    protected void setConsumer() throws IOException {
+        String queueName = groupId + "." + messageType;
         channel.basicQos(1);// 均衡投递
         channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this));
     }
@@ -165,8 +171,14 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                             return;
                         }
 
-                        handle(message);
-                        messageStore.saveOrUpdate(message);
+                        try {
+                            handle(message);
+                            messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
+                        }catch (Exception e) {
+                            logger.error("[NOTIFY]timer handle error.", e);
+                            messageStore.saveOrUpdate(message);
+                        }
+
                     }else {
                         //todo
                     }

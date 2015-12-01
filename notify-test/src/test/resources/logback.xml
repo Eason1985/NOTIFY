@@ -3,14 +3,14 @@
 
   	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     	<encoder>
-      		<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} T:%X{traceId} U:%X{userId} - %msg%n</Pattern>
+      		<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
     	</encoder>
   	</appender>
 
   
   	<logger name="com.mdiaf" level="TRACE"/>
   	
-  	<root level="WARN">
+  	<root level="DEBUG">
     	<appender-ref ref="STDOUT" />
   	</root>
 </configuration>
