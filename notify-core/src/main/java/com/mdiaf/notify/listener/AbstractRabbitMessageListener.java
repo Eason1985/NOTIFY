@@ -92,7 +92,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             timer = new Timer("messageListener-"+NUMBER.intValue(), true);
         }
 
-        timer.schedule(new HeartbeatTimer(), Configuration.TIMER_DELAY, 2 * 1000);
+        timer.schedule(new HeartbeatTimer(), Configuration.TIMER_DELAY, 3 * 1000);
         timer.schedule(new ListenerTimer(), Configuration.TIMER_DELAY, Configuration.RECEIVED_TIMER_PERIOD);
     }
 
@@ -146,8 +146,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         @Override
         public void run() {
             try {
-                if (logger.isInfoEnabled()) {
-                    logger.info("[NOTIFY]HeartbeatTimer Running...");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[NOTIFY]HeartbeatTimer Running...");
                 }
 
                 if (!channel.isOpen()) {
