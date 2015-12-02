@@ -26,9 +26,9 @@ public class RabbitMessageSenderTest extends BaseTest{
         int i = 0;
         while (true){
             ObjectMessage message = new ObjectMessage(new TestMessage(new Date() , i++));
-            messageSender.send(message, "eason-exchange", "eason_type_expire");
+            messageSender.expireSend(message, "eason-exchange", "eason_type_expire", 1000);
             messageSender.send(message, "eason-exchange", "eason_type_expire1");
-            Thread.sleep(1000 * 5);
+            Thread.sleep(1000 * 10);
         }
     }
 

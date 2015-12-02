@@ -48,7 +48,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     private Timer timer;
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
 
-    protected Configuration configuration;
+    protected Configuration configuration = new Configuration();
 
     /**
      * local or remote
@@ -92,8 +92,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             timer = new Timer("messageListener-"+NUMBER.intValue(), true);
         }
 
-        timer.schedule(new HeartbeatTimer(), 3 * 60 * 1000, 3 * 1000);
-        timer.schedule(new ListenerTimer(), 3 * 60 * 1000, 60 * 1000);
+        timer.schedule(new HeartbeatTimer(), Configuration.TIMER_DELAY, 2 * 1000);
+        timer.schedule(new ListenerTimer(), Configuration.TIMER_DELAY, Configuration.RECEIVED_TIMER_PERIOD);
     }
 
     private void setMessageStore() {
@@ -138,7 +138,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     protected void setConsumer() throws IOException {
         String queueName = groupId + "." + messageType;
         channel.basicQos(1);// 均衡投递
-        channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this));
+        channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this, groupId));
     }
 
     private class HeartbeatTimer extends TimerTask {
@@ -146,6 +146,10 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         @Override
         public void run() {
             try {
+                if (logger.isInfoEnabled()) {
+                    logger.info("[NOTIFY]HeartbeatTimer Running...");
+                }
+
                 if (!channel.isOpen()) {
                     setChannel();
                 }
@@ -162,13 +166,18 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             try {
                 List<IMessage> messageList = AbstractRabbitMessageListener.this.messageStore.
                         findMomentBefore(AbstractRabbitMessageListener.this.configuration.getResendPeriod());
+
+                if (logger.isInfoEnabled()) {
+                    logger.info("[NOTIFY]{} messages wait for consume", messageList.size());
+                }
+
                 for (IMessage message : messageList) {
                     if (message instanceof MessageWrapper) {
                         MessageWrapper wrapper = (MessageWrapper) message;
                         if (wrapper.getCount() >= AbstractRabbitMessageListener.this.configuration.getMaxResend()) {
                             AbstractRabbitMessageListener.this.configuration.getReturnListener().handleReturn(message);
                             AbstractRabbitMessageListener.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
-                            return;
+                            continue;
                         }
 
                         try {

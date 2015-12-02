@@ -33,6 +33,6 @@ public class LocalStoreConfirmListener implements IConfirmListener {
 
     @Override
     public void handleNack(String msgUnique) throws LocalStoreException {
-        logger.warn("[NOTIFY]message:%s send fault,and resend later.");
+        logger.warn("[NOTIFY]message:{} send fault,and resend later.", msgUnique);
     }
 }

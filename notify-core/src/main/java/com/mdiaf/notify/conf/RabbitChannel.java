@@ -72,6 +72,10 @@ public class RabbitChannel implements IChannel {
         this.delegate = conn.createChannel(false);
         this.configuration = configuration;
         initDelegate();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Channel create success.num={}", delegate.getChannelNumber());
+        }
     }
 
     private void initDelegate() throws IOException {
@@ -109,6 +113,11 @@ public class RabbitChannel implements IChannel {
 
     @Override
     public void send(IMessage message, String topic, String messageType) throws IOException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[NOTIFY]send=>[topic:{},type={},uniqueId={}]",
+                    topic, messageType, message.getHeader().getUniqueId());
+        }
+
         delegate.basicPublish(topic, messageType, true, RabbitMQPropertiesConverter.fromMessage(message), message.toBytes());
         noConfirms.put(delegate.getNextPublishSeqNo() - 1, message.getHeader().getUniqueId());
     }
@@ -141,6 +150,12 @@ public class RabbitChannel implements IChannel {
                 logger.warn("[NOTIFY]uniqueId:{} not in the noConfirms.", uniqueId);
                 return;
             }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[NOTIFY]confirm=>deliveryTag={},channelNum={}, uniqueId={}"
+                        , deliveryTag, delegate.getChannelNumber(), uniqueId);
+            }
+
             confirmListener.handleAck(uniqueId);
             noConfirms.remove(deliveryTag);
         }

@@ -16,24 +16,33 @@
 
     <bean id="messageSender" class="com.mdiaf.notify.sender.RabbitMessageSender" >
         <property name="connectionFactory" ref="connectionFactory" />
+        <property name="configuration">
+            <bean class="com.mdiaf.notify.conf.Configuration" >
+                <property name="maxResend" value="1" />
+                <property name="returnListener" ref="listenerTest" />
+            </bean>
+        </property>
+
     </bean>
 
-    <!--<bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyListener" >-->
-        <!--<property name="connectionFactory" ref="connectionFactory" />-->
-        <!--<property name="groupId" value="eason_test_group2" />-->
-        <!--<property name="messageType" value="eason_type_expire" />-->
-        <!--<property name="topic" value="eason-exchange" />-->
-    <!--</bean>-->
-
-    <bean id="notifyListener2" class="com.mdiaf.notify.listener.NotifyMultiListener" >
+    <bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyMultiListener" >
         <property name="connectionFactory" ref="connectionFactory" />
         <property name="groupId" value="eason_test_group2" />
-        <property name="topic" value="eason-exchange" />
         <property name="messageTypes">
-            <array>
+            <list>
                 <value>eason_type_expire</value>
                 <value>eason_type_expire1</value>
-            </array>
+            </list>
+        </property>
+        <property name="topic" value="eason-exchange" />
+        <property name="configuration">
+            <bean class="com.mdiaf.notify.conf.Configuration" >
+                <property name="maxResend" value="1" />
+                <property name="returnListener" ref="listenerTest" />
+            </bean>
         </property>
     </bean>
+
+    <bean class="com.mdiaf.notify.sender.ReturnListenerTest" id="listenerTest"/>
+
 </beans>

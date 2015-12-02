@@ -31,7 +31,7 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
     //todo create it by myself one day
     private ConnectionFactory connectionFactory;
 
-    private Configuration configuration;
+    private Configuration configuration = new Configuration();
 
     private IMessageStore messageStore;
 
@@ -51,8 +51,8 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
         try {
             message.getHeader().setTopic(topic);
             message.getHeader().setType(messageType);
-            messageStore.saveOrUpdate(message);
             channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
+            messageStore.saveOrUpdate(message);
             channel.send(message, topic, messageType);
         } catch (SQLException e) {
             throw new IOException("[NOTIFY]message local store fault.", e);
@@ -111,7 +111,7 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
             timer = new Timer("messageSendTimer-"+NUMBER.intValue(), true);
         }
 
-        timer.schedule(new SenderTimer(), 3*60*1000, 60*1000);
+        timer.schedule(new SenderTimer(), Configuration.TIMER_DELAY, Configuration.SENDER_TIMER_PERIOD);
     }
 
     private void setMessageStore() {
@@ -142,19 +142,24 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
             try {
                 List<IMessage> messageList = RabbitMessageSender.this.messageStore.
                         findMomentBefore(RabbitMessageSender.this.configuration.getResendPeriod());
+
+                if (logger.isInfoEnabled()) {
+                    logger.info("[NOTIFY] {} messages wait for resend", messageList.size());
+                }
+
                 for (IMessage message : messageList) {
                     if (message instanceof MessageWrapper) {
                         MessageWrapper wrapper = (MessageWrapper) message;
                         if (wrapper.getCount() >= RabbitMessageSender.this.configuration.getMaxResend()) {
                             RabbitMessageSender.this.configuration.getReturnListener().handleReturn(message);
                             RabbitMessageSender.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
-                            return;
+                            continue;
                         }
 
                         if (wrapper.getHeader().getDelay() > 0) {
                             if (message.getHeader().getDelay() < System.currentTimeMillis() - ((MessageWrapper) message).getSendTimestamp()*1000) {
                                 RabbitMessageSender.this.expireSend(message, message.getHeader().getTopic(), message.getHeader().getType(), message.getHeader().getDelay());
-                                return;
+                                continue;
                             }
                         }
 

@@ -10,16 +10,19 @@ import com.mdiaf.notify.sender.IReturnListener;
 public class Configuration {
 
     private IReturnListener returnListener;
-
     private IConfirmListener confirmListener;
 
     /**
      * resend per time by second unit.
      */
-    private final static int DEFAULT_RESEND_PERIOD = 60;
-
+    private final static int DEFAULT_RESEND_PERIOD = 1;
     private final static int DEFAULT_MAX_RESEND = 3;
+
     private int maxResend = DEFAULT_MAX_RESEND;
+
+    public final static int TIMER_DELAY = 5*60*1000;
+    public final static int SENDER_TIMER_PERIOD = 60*1000;
+    public final static int RECEIVED_TIMER_PERIOD = 60*1000;
 
     public int getResendPeriod() {
         return DEFAULT_RESEND_PERIOD;

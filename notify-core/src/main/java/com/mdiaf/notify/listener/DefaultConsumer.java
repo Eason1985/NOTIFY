@@ -25,35 +25,49 @@ public class DefaultConsumer implements Consumer {
 
     private String consumerTag;
 
-    public DefaultConsumer(Channel channel, IMessageStore messageStore, IMessageListener messageListener) {
+    private String groupId;
+
+    public DefaultConsumer(Channel channel, IMessageStore messageStore, IMessageListener messageListener, String groupId) {
         this.channel = channel;
         this.messageStore = messageStore;
         this.messageListener = messageListener;
+        this.groupId = groupId;
     }
 
     @Override
     public void handleConsumeOk(String consumerTag) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[NOTIFY]handleConsumeOk:{}", consumerTag);
+        }
         this.consumerTag = consumerTag;
     }
 
     @Override
     public void handleCancelOk(String consumerTag) {
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("[NOTIFY]handleCancelOk:{}", consumerTag);
+        }
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("[NOTIFY]handleCancel:{}", consumerTag);
+        }
     }
 
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("[NOTIFY]handleShutdownSignal:{}", consumerTag);
+        }
     }
 
     @Override
     public void handleRecoverOk(String consumerTag) {
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("[NOTIFY]handleRecoverOk:{}", consumerTag);
+        }
     }
 
     @Override
@@ -62,15 +76,20 @@ public class DefaultConsumer implements Consumer {
 
         IMessage message = null;
         try {
-            if (logger.isDebugEnabled()) {
-                logger.debug("deliveryTag:"+deliveryTag );
-                logger.debug("consumerTag:" + consumerTag);
-            }
-
             message = RabbitMQPropertiesConverter.toMessage(properties, body, envelope);
             message.getHeader().setMessageId(properties.getMessageId());
+            message.getHeader().setGroupId(groupId);
             messageStore.saveOrUpdate(message);
             channel.basicAck(deliveryTag, false);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[NOTIFY]received=>[topic:{},type:{},groupId:{},uniqueId:{}]",
+                        message.getHeader().getTopic(),
+                        message.getHeader().getType(),
+                        message.getHeader().getGroupId(),
+                        message.getHeader().getUniqueId());
+            }
+
         } catch (Exception e) {
             logger.warn("message handler error,requeue it.", e);
             channel.basicNack(deliveryTag, false, true);
@@ -87,5 +106,9 @@ public class DefaultConsumer implements Consumer {
                 logger.error("[NOTIFY]messageStore error.", e1);
             }
         }
+    }
+
+    public String getConsumerTag() {
+        return consumerTag;
     }
 }

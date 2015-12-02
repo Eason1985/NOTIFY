@@ -54,7 +54,9 @@ public abstract class AbstractMessageStore implements IMessageStore {
         List<IMessage> messages = new ArrayList<>();
         List<MessageBean> messageBeanList = bean.findMomentBefore(getTableName(), seconds, template);
         for (MessageBean messageBean : messageBeanList) {
-            messages.add((IMessage) SerializationUtils.deserialize(messageBean.getMessage()));
+            IMessage message = (IMessage) SerializationUtils.deserialize(messageBean.getMessage());
+            MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
+            messages.add(wrapper);
         }
         return messages;
     }
@@ -66,7 +68,7 @@ public abstract class AbstractMessageStore implements IMessageStore {
     }
 
     private void init() {
-        logger.info("[notify]messageStore init,tableName={}", getTableName());
+        logger.info("[NOTIFY]messageStore init,tableName={}", getTableName());
         checkOrCreateTable();
     }
 
