@@ -98,9 +98,9 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     private void setMessageStore() {
         if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
-            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate());
+            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()));
         }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
-            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate());
+            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()));
         }else {
             throw new RuntimeException("mode must in (local, remote)");
         }

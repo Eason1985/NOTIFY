@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class MessageStoreTest {
 
-    private static JdbcTemplate jdbcTemplate = JDBCTemplateFactory.LOCAL.getJdbcTemplate();
+    private static JdbcTemplate jdbcTemplate = JDBCTemplateFactory.LOCAL.getJdbcTemplate("");
 
     private IMessageStore messageStore;
 

@@ -11,14 +11,15 @@ public class Configuration {
 
     private IReturnListener returnListener;
     private IConfirmListener confirmListener;
-
+    private int maxResend = DEFAULT_MAX_RESEND;
+    private String url;
     /**
      * resend per time by second unit.
      */
-    private final static int DEFAULT_RESEND_PERIOD = 1;
+    private final static int DEFAULT_RESEND_PERIOD = 30;
     private final static int DEFAULT_MAX_RESEND = 3;
 
-    private int maxResend = DEFAULT_MAX_RESEND;
+
 
     public final static int TIMER_DELAY = 5*60*1000;
     public final static int SENDER_TIMER_PERIOD = 60*1000;
@@ -49,6 +50,14 @@ public class Configuration {
             return new DefaultReturnListener();
         }
         return returnListener;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public void setReturnListener(IReturnListener returnListener) {

@@ -39,6 +39,7 @@
             <bean class="com.mdiaf.notify.conf.Configuration" >
                 <property name="maxResend" value="1" />
                 <property name="returnListener" ref="listenerTest" />
+                <property name="url" value="/Users/Eason/workspace" />
             </bean>
         </property>
     </bean>

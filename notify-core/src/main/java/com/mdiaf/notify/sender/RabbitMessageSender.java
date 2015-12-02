@@ -117,9 +117,9 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
     private void setMessageStore() {
 
         if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
-            messageStore = new ProducerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate());
+            messageStore = new ProducerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()));
         }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
-            messageStore = new ProducerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate());
+            messageStore = new ProducerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()));
         }else {
             throw new RuntimeException("mode must in (local, remote)");
         }
