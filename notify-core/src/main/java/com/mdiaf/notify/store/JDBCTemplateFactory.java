@@ -27,7 +27,7 @@ public enum JDBCTemplateFactory {
      */
     private final String mode;
 
-    private static final String STORE_LOCAL_PATH = "../..";
+    private static final String STORE_LOCAL_PATH = System.getProperty("user.home");
     private static final String STORE_LOCAL_DRIVER_CLASS_NAME = "org.sqlite.JDBC";
     private static final String STORE_LOCAL_DB = "notify.db";
 
@@ -37,7 +37,7 @@ public enum JDBCTemplateFactory {
 
     public synchronized JdbcTemplate getJdbcTemplate(final String url){
         String path = StringUtils.isBlank(url) ? STORE_LOCAL_PATH : url;
-        path += "/SQLite";
+        path += "/.SQLite";
         String key = mode + "_" + path;
 
         if (templateMap.containsKey(key)) {
