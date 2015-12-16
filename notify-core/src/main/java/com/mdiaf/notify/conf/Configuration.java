@@ -21,7 +21,7 @@ public class Configuration {
 
 
 
-    public final static int TIMER_DELAY = 5*60*1000;
+    public final static int TIMER_DELAY = 3*60*1000;
     public final static int SENDER_TIMER_PERIOD = 60*1000;
     public final static int RECEIVED_TIMER_PERIOD = 60*1000;
 

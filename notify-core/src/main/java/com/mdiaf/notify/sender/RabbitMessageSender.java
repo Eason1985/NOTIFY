@@ -65,21 +65,13 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
 
     @Override
     public void expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
-        IChannel channel = null;
         try {
             message.getHeader().setDelay(delay);
             message.getHeader().setTopic(topic);
             message.getHeader().setType(messageType);
             messageStore.saveOrUpdate(message);
-            channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
-            channel.expireSend(message, topic, messageType, delay);
-            channel.free();
         } catch (SQLException e) {
             throw new IOException("[NOTIFY]message local store fault.", e);
-        } finally {
-            if (channel != null) {
-                channel.free();
-            }
         }
     }
 
@@ -158,7 +150,7 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
 
                         if (wrapper.getHeader().getDelay() > 0) {
                             if (message.getHeader().getDelay() < System.currentTimeMillis() - ((MessageWrapper) message).getSendTimestamp()*1000) {
-                                RabbitMessageSender.this.expireSend(message, message.getHeader().getTopic(), message.getHeader().getType(), message.getHeader().getDelay());
+                                RabbitMessageSender.this.send(message, message.getHeader().getTopic(), message.getHeader().getType());
                                 continue;
                             }
                         }

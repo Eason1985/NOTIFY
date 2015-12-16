@@ -123,7 +123,7 @@ public class RabbitChannel implements IChannel {
     }
 
     @Override
-    public void expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
+    public void  expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
         String delayMessageType = messageType + ".delay."+delay;
         Map<String, Object> args = new HashMap<>();
         args.put("x-message-ttl" , delay);

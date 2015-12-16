@@ -18,7 +18,7 @@
         <property name="connectionFactory" ref="connectionFactory" />
         <property name="configuration">
             <bean class="com.mdiaf.notify.conf.Configuration" >
-                <property name="maxResend" value="1" />
+                <property name="maxResend" value="3" />
                 <property name="returnListener" ref="listenerTest" />
             </bean>
         </property>
@@ -37,7 +37,7 @@
         <property name="topic" value="eason-exchange" />
         <property name="configuration">
             <bean class="com.mdiaf.notify.conf.Configuration" >
-                <property name="maxResend" value="1" />
+                <property name="maxResend" value="3" />
                 <property name="returnListener" ref="listenerTest" />
                 <property name="url" value="/Users/Eason/workspace" />
             </bean>

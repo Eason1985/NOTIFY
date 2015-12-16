@@ -144,12 +144,12 @@
         <repository>
             <id>aiaf-internal</id>
             <name>Aiaf Release Repository</name>
-            <url>http://nexus.nfs.org/nexus/content/repositories/releases/</url>
+            <url>http://nexus.corp.fc18.com.cn/nexus/content/repositories/releases/</url>
         </repository>
         <snapshotRepository>
             <id>aiaf-snapshot</id>
             <name>Aiaf Snapshot Repository</name>
-            <url>http://nexus.nfs.org/nexus/content/repositories/snapshots/</url>
+            <url>http://nexus.corp.fc18.com.cn/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
