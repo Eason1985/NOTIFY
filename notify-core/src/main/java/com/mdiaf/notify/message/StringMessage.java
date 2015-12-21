@@ -1,6 +1,6 @@
 package com.mdiaf.notify.message;
 
-import com.mdiaf.notify.utils.SerializationUtils;
+import com.mdiaf.notify.utils.SerializationUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -56,7 +56,7 @@ public class StringMessage implements IMessage {
 
     @Override
     public byte[] toBytes() {
-        return SerializationUtils.serialize(this);
+        return SerializationUtil.serialize(this);
     }
 
 

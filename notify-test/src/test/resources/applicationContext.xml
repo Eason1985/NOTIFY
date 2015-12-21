@@ -20,6 +20,7 @@
             <bean class="com.mdiaf.notify.conf.Configuration" >
                 <property name="maxResend" value="3" />
                 <property name="returnListener" ref="listenerTest" />
+                <property name="timerDelay" value="1000" />
             </bean>
         </property>
 
@@ -39,7 +40,6 @@
             <bean class="com.mdiaf.notify.conf.Configuration" >
                 <property name="maxResend" value="3" />
                 <property name="returnListener" ref="listenerTest" />
-                <property name="url" value="/Users/Eason/workspace" />
             </bean>
         </property>
     </bean>

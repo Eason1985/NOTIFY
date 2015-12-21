@@ -1,7 +1,7 @@
 package com.mdiaf.notify.store;
 
 import com.mdiaf.notify.message.IMessage;
-import com.mdiaf.notify.utils.SerializationUtils;
+import com.mdiaf.notify.utils.SerializationUtil;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,14 +23,16 @@ import java.util.Map;
  * create table {name}
  * Created by Eason on 15/11/14.
  */
-public abstract class AbstractMessageStore implements IMessageStore {
+public class DefaultMessageStore implements IMessageStore {
 
     private final static Logger logger = LoggerFactory.getLogger(IMessageStore.class);
 
     private final JdbcTemplate template;
+    private final String tableName;
 
-    public AbstractMessageStore(JdbcTemplate jdbcTemplate) {
+    public DefaultMessageStore(JdbcTemplate jdbcTemplate, String tableName) {
         this.template = jdbcTemplate;
+        this.tableName = tableName;
         init();
     }
 
@@ -40,11 +42,11 @@ public abstract class AbstractMessageStore implements IMessageStore {
                 message.getHeader().getType(), message.getHeader().getGroupId(),
                 message.getHeader().getUniqueId(), message.toBytes());
 
-        MessageBean messageBean = bean.findByUniqueId(getTableName(), template);
+        MessageBean messageBean = bean.findByUniqueId(tableName, template);
         if (messageBean != null){
-            bean.incTimes(getTableName(), template);
+            bean.incTimes(tableName, template);
         }else {
-            bean.insert(getTableName(), template);
+            bean.insert(tableName, template);
         }
     }
 
@@ -52,9 +54,9 @@ public abstract class AbstractMessageStore implements IMessageStore {
     public List<IMessage> findMomentBefore(long seconds) {
         MessageBean bean = new MessageBean();
         List<IMessage> messages = new ArrayList<>();
-        List<MessageBean> messageBeanList = bean.findMomentBefore(getTableName(), seconds, template);
+        List<MessageBean> messageBeanList = bean.findMomentBefore(tableName, seconds, template);
         for (MessageBean messageBean : messageBeanList) {
-            IMessage message = (IMessage) SerializationUtils.deserialize(messageBean.getMessage());
+            IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
             MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
             messages.add(wrapper);
         }
@@ -64,20 +66,18 @@ public abstract class AbstractMessageStore implements IMessageStore {
     @Override
     public void deleteByUniqueId(String uniqueId) throws SQLException {
         MessageBean bean = new MessageBean(null, null, null, uniqueId, null);
-        bean.deleteByUniqueId(getTableName(), template);
+        bean.deleteByUniqueId(tableName, template);
     }
 
     private void init() {
-        logger.info("[NOTIFY]messageStore init,tableName={}", getTableName());
+        logger.info("[NOTIFY]messageStore init,tableName={}", tableName);
         checkOrCreateTable();
     }
 
     private void checkOrCreateTable() {
         MessageBean bean = new MessageBean();
-        bean.createTable(getTableName(), template);
+        bean.createTable(tableName, template);
     }
-
-    abstract String getTableName();
 
     private class MessageBean implements Serializable{
         private static final long serialVersionUID = 4836496186954452826L;

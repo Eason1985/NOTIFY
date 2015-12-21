@@ -1,6 +1,6 @@
 package com.mdiaf.notify.message;
 
-import com.mdiaf.notify.utils.SerializationUtils;
+import com.mdiaf.notify.utils.SerializationUtil;
 
 /**
  * Created by Eason on 15/10/4.
@@ -29,7 +29,7 @@ public class BytesMessage implements IMessage {
 
     @Override
     public byte[] toBytes() {
-        return SerializationUtils.serialize(this);
+        return SerializationUtil.serialize(this);
     }
 
     @Override

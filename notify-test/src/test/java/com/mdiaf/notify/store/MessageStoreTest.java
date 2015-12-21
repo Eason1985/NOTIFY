@@ -5,7 +5,6 @@ import com.mdiaf.notify.message.ObjectMessage;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.testng.Assert;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -54,15 +53,11 @@ public class MessageStoreTest {
 
     }
 
-    public class TestMessageStore extends AbstractMessageStore {
+    public class TestMessageStore extends DefaultMessageStore {
 
         public TestMessageStore(JdbcTemplate jdbcTemplate) {
-            super(jdbcTemplate);
+            super(jdbcTemplate, "test");
         }
 
-        @Override
-        String getTableName() {
-            return "test";
-        }
     }
 }

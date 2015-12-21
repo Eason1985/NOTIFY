@@ -4,10 +4,11 @@ import com.mdiaf.notify.conf.Configuration;
 import com.mdiaf.notify.conf.IChannel;
 import com.mdiaf.notify.conf.RabbitChannel;
 import com.mdiaf.notify.message.IMessage;
+import com.mdiaf.notify.store.DefaultMessageStore;
 import com.mdiaf.notify.store.IMessageStore;
 import com.mdiaf.notify.store.JDBCTemplateFactory;
 import com.mdiaf.notify.store.MessageWrapper;
-import com.mdiaf.notify.store.ProducerMessageStore;
+import com.mdiaf.notify.utils.IPUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
 
     private Timer timer;
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
+    private final static String STORE_NAME = "producer_";
 
     /**
      * local or remote
@@ -51,8 +53,8 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
         try {
             message.getHeader().setTopic(topic);
             message.getHeader().setType(messageType);
-            channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
             messageStore.saveOrUpdate(message);
+            channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
             channel.send(message, topic, messageType);
         } catch (SQLException e) {
             throw new IOException("[NOTIFY]message local store fault.", e);
@@ -65,13 +67,20 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
 
     @Override
     public void expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
+        IChannel channel = null;
         try {
             message.getHeader().setDelay(delay);
             message.getHeader().setTopic(topic);
             message.getHeader().setType(messageType);
             messageStore.saveOrUpdate(message);
+            channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
+            channel.expireSend(message, topic, messageType, delay);
         } catch (SQLException e) {
             throw new IOException("[NOTIFY]message local store fault.", e);
+        } finally {
+            if (channel != null) {
+                channel.free();
+            }
         }
     }
 
@@ -103,15 +112,18 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
             timer = new Timer("messageSendTimer-"+NUMBER.intValue(), true);
         }
 
-        timer.schedule(new SenderTimer(), Configuration.TIMER_DELAY, Configuration.SENDER_TIMER_PERIOD);
+        timer.schedule(new SenderTimer(), configuration.getTimerDelay(), Configuration.SENDER_TIMER_PERIOD);
     }
 
     private void setMessageStore() {
-
+        String key = String.valueOf(IPUtil.Ip2Int(connectionFactory.getHost()));
+        String tableName = STORE_NAME + key;
         if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
-            messageStore = new ProducerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()));
+            messageStore = new DefaultMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()),
+                    tableName);
         }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
-            messageStore = new ProducerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()));
+            messageStore = new DefaultMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()),
+                    tableName);
         }else {
             throw new RuntimeException("mode must in (local, remote)");
         }
@@ -149,10 +161,9 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
                         }
 
                         if (wrapper.getHeader().getDelay() > 0) {
-                            if (message.getHeader().getDelay() < System.currentTimeMillis() - ((MessageWrapper) message).getSendTimestamp()*1000) {
-                                RabbitMessageSender.this.send(message, message.getHeader().getTopic(), message.getHeader().getType());
-                                continue;
-                            }
+                            RabbitMessageSender.this.expireSend(message, message.getHeader().getTopic(),
+                                    message.getHeader().getType(), wrapper.getHeader().getDelay());
+                            continue;
                         }
 
                         RabbitMessageSender.this.send(message, message.getHeader().getTopic(), message.getHeader().getType());

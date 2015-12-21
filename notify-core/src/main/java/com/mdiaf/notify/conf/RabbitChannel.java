@@ -3,6 +3,7 @@ package com.mdiaf.notify.conf;
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.sender.IConfirmListener;
 import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 
 import org.apache.commons.lang3.StringUtils;
@@ -114,11 +115,11 @@ public class RabbitChannel implements IChannel {
     @Override
     public void send(IMessage message, String topic, String messageType) throws IOException {
         if (logger.isDebugEnabled()) {
-            logger.debug("[NOTIFY]send=>[topic:{},type={},uniqueId={}]",
-                    topic, messageType, message.getHeader().getUniqueId());
+            logger.debug("[NOTIFY]send=>[header:{}]",
+                    message.getHeader().toString());
         }
 
-        delegate.basicPublish(topic, messageType, true, RabbitMQPropertiesConverter.fromMessage(message), message.toBytes());
+        delegate.basicPublish(topic, messageType, true, RabbitMQPropertiesConverter.fromMessage(message).build(), message.toBytes());
         noConfirms.put(delegate.getNextPublishSeqNo() - 1, message.getHeader().getUniqueId());
     }
 
@@ -129,9 +130,9 @@ public class RabbitChannel implements IChannel {
         args.put("x-message-ttl" , delay);
         args.put("x-dead-letter-exchange" , topic);
         args.put("x-dead-letter-routing-key", messageType);
-        //定义一个延迟queue,auto delete 如果消费者都不订阅了，queue还有没有存在的必要？ todo
         delegate.queueDeclare(delayMessageType, true, false, true, args);
-        delegate.basicPublish("", delayMessageType, true, RabbitMQPropertiesConverter.fromMessage(message), message.toBytes()); //发送消息到延迟queue
+        AMQP.BasicProperties.Builder builder = RabbitMQPropertiesConverter.fromMessage(message);
+        delegate.basicPublish("", delayMessageType, true, builder.build(), message.toBytes()); //发送消息到延迟queue
         noConfirms.put(delegate.getNextPublishSeqNo() - 1, message.getHeader().getUniqueId());
     }
 
@@ -147,7 +148,7 @@ public class RabbitChannel implements IChannel {
         public void handleAck(long deliveryTag, boolean multiple) throws IOException {
             String uniqueId = noConfirms.get(deliveryTag);
             if (StringUtils.isBlank(uniqueId)) {
-                logger.warn("[NOTIFY]uniqueId:{} not in the noConfirms.", uniqueId);
+                logger.warn("[NOTIFY]deliveryTag:{} not in the noConfirms.", deliveryTag);
                 return;
             }
 

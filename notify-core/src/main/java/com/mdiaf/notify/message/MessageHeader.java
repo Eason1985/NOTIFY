@@ -104,8 +104,11 @@ public class MessageHeader implements Serializable{
         return "MessageHeader{" +
                 "topic='" + topic + '\'' +
                 ", type='" + type + '\'' +
+                ", groupId='" + groupId + '\'' +
                 ", uniqueId='" + uniqueId + '\'' +
+                ", deliveredTag=" + deliveredTag +
                 ", messageId='" + messageId + '\'' +
+                ", delay=" + delay +
                 ", properties=" + properties +
                 '}';
     }

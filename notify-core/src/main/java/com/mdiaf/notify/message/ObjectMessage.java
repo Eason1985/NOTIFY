@@ -1,6 +1,6 @@
 package com.mdiaf.notify.message;
 
-import com.mdiaf.notify.utils.SerializationUtils;
+import com.mdiaf.notify.utils.SerializationUtil;
 
 import java.io.Serializable;
 
@@ -16,7 +16,7 @@ public class ObjectMessage implements IMessage {
 
     public ObjectMessage(Object body) {
         if (body instanceof Serializable){
-            this.body = SerializationUtils.serialize(body);
+            this.body = SerializationUtil.serialize(body);
             header = new MessageHeader();
             return;
         }
@@ -35,12 +35,12 @@ public class ObjectMessage implements IMessage {
 
     @Override
     public Object getBody() {
-        return SerializationUtils.deserialize(body);
+        return SerializationUtil.deserialize(body);
     }
 
     @Override
     public byte[] toBytes() {
-        return SerializationUtils.serialize(this);
+        return SerializationUtil.serialize(this);
     }
 
 }

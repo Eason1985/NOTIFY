@@ -5,7 +5,7 @@ import java.io.*;
 /**
  * Created by Eason on 15/10/4.
  */
-public class SerializationUtils {
+public class SerializationUtil {
 
     /**
      * Serialize the object provided.

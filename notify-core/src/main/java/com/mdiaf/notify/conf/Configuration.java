@@ -11,17 +11,22 @@ public class Configuration {
 
     private IReturnListener returnListener;
     private IConfirmListener confirmListener;
-    private int maxResend = DEFAULT_MAX_RESEND;
+    private int maxResend;
+    private long timerDelay;
     private String url;
     /**
-     * resend per time by second unit.
+     * resend per time by unit of second .
      */
     private final static int DEFAULT_RESEND_PERIOD = 30;
+
     private final static int DEFAULT_MAX_RESEND = 3;
 
 
+    /**
+     * make it small when you in test.
+     */
+    private final static int TIMER_DELAY = 3*60*1000;
 
-    public final static int TIMER_DELAY = 3*60*1000;
     public final static int SENDER_TIMER_PERIOD = 30*1000;
     public final static int RECEIVED_TIMER_PERIOD = 30*1000;
 
@@ -30,7 +35,10 @@ public class Configuration {
     }
 
     public int getMaxResend() {
-        return maxResend;
+        if (maxResend > 0) {
+            return maxResend;
+        }
+        return DEFAULT_MAX_RESEND;
     }
 
     public void setMaxResend(int maxResend) {
@@ -62,5 +70,16 @@ public class Configuration {
 
     public void setReturnListener(IReturnListener returnListener) {
         this.returnListener = returnListener;
+    }
+
+    public void setTimerDelay(long timerDelay) {
+        this.timerDelay = timerDelay;
+    }
+
+    public long getTimerDelay() {
+        if (timerDelay > 0) {
+            return timerDelay;
+        }
+        return TIMER_DELAY;
     }
 }

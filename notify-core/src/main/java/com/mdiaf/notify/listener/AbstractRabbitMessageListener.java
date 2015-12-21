@@ -2,10 +2,11 @@ package com.mdiaf.notify.listener;
 
 import com.mdiaf.notify.conf.Configuration;
 import com.mdiaf.notify.message.IMessage;
-import com.mdiaf.notify.store.ConsumerMessageStore;
+import com.mdiaf.notify.store.DefaultMessageStore;
 import com.mdiaf.notify.store.IMessageStore;
 import com.mdiaf.notify.store.JDBCTemplateFactory;
 import com.mdiaf.notify.store.MessageWrapper;
+import com.mdiaf.notify.utils.IPUtil;
 import com.rabbitmq.client.Channel;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     private Timer timer;
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
+    private final static String STORE_NAME = "consumer_";
 
     protected Configuration configuration = new Configuration();
 
@@ -92,15 +94,19 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             timer = new Timer("messageListener-"+NUMBER.intValue(), true);
         }
 
-        timer.schedule(new HeartbeatTimer(), Configuration.TIMER_DELAY, 3 * 1000);
-        timer.schedule(new ListenerTimer(), Configuration.TIMER_DELAY, Configuration.RECEIVED_TIMER_PERIOD);
+        timer.schedule(new HeartbeatTimer(), configuration.getTimerDelay(), 60 * 1000);
+        timer.schedule(new ListenerTimer(), configuration.getTimerDelay(), Configuration.RECEIVED_TIMER_PERIOD);
     }
 
     private void setMessageStore() {
+        String key = String.valueOf(IPUtil.Ip2Int(connectionFactory.getHost()));
+        String tableName = STORE_NAME + key;
         if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
-            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()));
+            messageStore = new DefaultMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()),
+                    tableName);
         }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
-            messageStore = new ConsumerMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()));
+            messageStore = new DefaultMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()),
+                    tableName);
         }else {
             throw new RuntimeException("mode must in (local, remote)");
         }

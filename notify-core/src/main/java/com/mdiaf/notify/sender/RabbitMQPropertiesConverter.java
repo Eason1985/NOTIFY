@@ -1,7 +1,7 @@
 package com.mdiaf.notify.sender;
 
 import com.mdiaf.notify.message.*;
-import com.mdiaf.notify.utils.SerializationUtils;
+import com.mdiaf.notify.utils.SerializationUtil;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 
@@ -29,7 +29,7 @@ public class RabbitMQPropertiesConverter {
     public static final String PROPERTY_TYPE = "type";
 
 
-    public static AMQP.BasicProperties fromMessage(IMessage message){
+    public static AMQP.BasicProperties.Builder fromMessage(IMessage message){
         if (message instanceof StringMessage){
             return fromMessage((StringMessage) message);
         }
@@ -42,37 +42,38 @@ public class RabbitMQPropertiesConverter {
             return fromMessage((BytesMessage)message);
         }
 
-        return new AMQP.BasicProperties.Builder().build();
+        return new AMQP.BasicProperties.Builder();
     }
 
-    public static AMQP.BasicProperties fromMessage(StringMessage message){
+    public static AMQP.BasicProperties.Builder fromMessage(StringMessage message){
         AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
         builder.contentEncoding(message.getCharset());
         builder.contentType(CONTENT_TYPE_TEXT_PLAIN);
-        return builder.build();
+        return builder;
     }
 
-    public static AMQP.BasicProperties fromMessage(ObjectMessage message){
+    public static AMQP.BasicProperties.Builder fromMessage(ObjectMessage message){
         AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
         builder.contentType(CONTENT_TYPE_SERIALIZED_OBJECT);
-        return builder.build();
+        return builder;
     }
 
-    public static AMQP.BasicProperties fromMessage(BytesMessage message){
+    public static AMQP.BasicProperties.Builder fromMessage(BytesMessage message){
         AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
         builder.contentType(CONTENT_TYPE_BYTES);
-        return builder.build();
+        return builder;
     }
 
     public static IMessage toMessage(AMQP.BasicProperties properties , byte[] bytes){
-        IMessage message = (IMessage) SerializationUtils.deserialize(bytes);
+        IMessage message = (IMessage) SerializationUtil.deserialize(bytes);
         message.getHeader().setMessageId(properties.getMessageId());
         return message;
     }
 
     public static IMessage toMessage(AMQP.BasicProperties properties , byte[] bytes , Envelope envelope){
-        IMessage message = (IMessage) SerializationUtils.deserialize(bytes);
+        IMessage message = (IMessage) SerializationUtil.deserialize(bytes);
         message.getHeader().setMessageId(properties.getMessageId());
         return message;
     }
+
 }

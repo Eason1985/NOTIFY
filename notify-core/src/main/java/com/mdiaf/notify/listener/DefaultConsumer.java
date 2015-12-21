@@ -83,11 +83,8 @@ public class DefaultConsumer implements Consumer {
             channel.basicAck(deliveryTag, false);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("[NOTIFY]received=>[topic:{},type:{},groupId:{},uniqueId:{}]",
-                        message.getHeader().getTopic(),
-                        message.getHeader().getType(),
-                        message.getHeader().getGroupId(),
-                        message.getHeader().getUniqueId());
+                logger.debug("[NOTIFY]received=>[header:{}]",
+                        message.getHeader().toString());
             }
 
         } catch (Exception e) {
