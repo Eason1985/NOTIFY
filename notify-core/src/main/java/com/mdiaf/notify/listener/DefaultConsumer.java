@@ -4,11 +4,15 @@ import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
 import com.mdiaf.notify.store.IMessageStore;
 import com.rabbitmq.client.*;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Eason on 15/11/29.
@@ -27,11 +31,24 @@ public class DefaultConsumer implements Consumer {
 
     private String groupId;
 
-    public DefaultConsumer(Channel channel, IMessageStore messageStore, IMessageListener messageListener, String groupId) {
+    private String msgType;
+
+    private String topic;
+
+    private final static List<DefaultConsumer> consumerHolder = new ArrayList<>();
+
+    public DefaultConsumer(Channel channel, IMessageStore messageStore, IMessageListener messageListener, String groupId,
+                           String topic, String msgType) {
         this.channel = channel;
         this.messageStore = messageStore;
         this.messageListener = messageListener;
         this.groupId = groupId;
+        this.msgType = msgType;
+        this.topic = topic;
+        if (consumerHolder.contains(this)) {
+            throw new RuntimeException(toString() + " has more than one listener here.");
+        }
+        consumerHolder.add(this);
     }
 
     @Override
@@ -107,5 +124,38 @@ public class DefaultConsumer implements Consumer {
 
     public String getConsumerTag() {
         return consumerTag;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultConsumer{" +
+                "groupId='" + groupId + '\'' +
+                ", msgType='" + msgType + '\'' +
+                ", topic='" + topic + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DefaultConsumer that = (DefaultConsumer) o;
+
+        return new EqualsBuilder()
+                .append(groupId, that.groupId)
+                .append(msgType, that.msgType)
+                .append(topic, that.topic)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(groupId)
+                .append(msgType)
+                .append(topic)
+                .toHashCode();
     }
 }

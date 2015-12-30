@@ -22,4 +22,6 @@ public interface IMessageStore {
      */
     List<IMessage> findMomentBefore(long seconds) throws SQLException;
 
+    List<IMessage> findMessages(String topic, String msgType, String groupId) throws SQLException;
+
 }

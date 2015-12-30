@@ -144,7 +144,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     protected void setConsumer() throws IOException {
         String queueName = groupId + "." + messageType;
         channel.basicQos(1);// 均衡投递
-        channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this, groupId));
+        channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this, groupId, topic, messageType));
     }
 
     private class HeartbeatTimer extends TimerTask {
@@ -171,15 +171,21 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         public void run() {
             try {
                 List<IMessage> messageList = AbstractRabbitMessageListener.this.messageStore.
-                        findMomentBefore(AbstractRabbitMessageListener.this.configuration.getResendPeriod());
+                        findMessages(topic, messageType, groupId);
 
-                if (logger.isInfoEnabled()) {
+                if (logger.isDebugEnabled()) {
                     logger.info("[NOTIFY]{} messages wait for consume", messageList.size());
                 }
 
                 for (IMessage message : messageList) {
                     if (message instanceof MessageWrapper) {
                         MessageWrapper wrapper = (MessageWrapper) message;
+                        if (wrapper.getSendTimestamp()
+                                > System.currentTimeMillis() / 1000 - AbstractRabbitMessageListener.this.configuration.getResendPeriod()){
+                            // not yet
+                            continue;
+                        }
+
                         if (wrapper.getCount() >= AbstractRabbitMessageListener.this.configuration.getMaxResend()) {
                             AbstractRabbitMessageListener.this.configuration.getReturnListener().handleReturn(message);
                             AbstractRabbitMessageListener.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());

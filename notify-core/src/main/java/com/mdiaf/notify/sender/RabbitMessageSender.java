@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by Eason on 15/9/14.
  */
-public class RabbitMessageSender implements IMessageSender, InitializingBean {
+public final class RabbitMessageSender implements IMessageSender, InitializingBean {
 
     private final static Logger logger = LoggerFactory.getLogger(IMessageSender.class);
 
@@ -36,7 +36,6 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
 
     private IMessageStore messageStore;
 
-    private Timer timer;
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
     private final static String STORE_NAME = "producer_";
 
@@ -107,6 +106,7 @@ public class RabbitMessageSender implements IMessageSender, InitializingBean {
     }
 
     private void setTimer() {
+        Timer timer;
         synchronized (NUMBER) {
             NUMBER.incrementAndGet();
             timer = new Timer("messageSendTimer-"+NUMBER.intValue(), true);

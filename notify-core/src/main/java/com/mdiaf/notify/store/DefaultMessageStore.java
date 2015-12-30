@@ -2,6 +2,7 @@ package com.mdiaf.notify.store;
 
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.utils.SerializationUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,19 @@ public class DefaultMessageStore implements IMessageStore {
         MessageBean bean = new MessageBean();
         List<IMessage> messages = new ArrayList<>();
         List<MessageBean> messageBeanList = bean.findMomentBefore(tableName, seconds, template);
+        for (MessageBean messageBean : messageBeanList) {
+            IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
+            MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
+            messages.add(wrapper);
+        }
+        return messages;
+    }
+
+    @Override
+    public List<IMessage> findMessages(String topic, String msgType, String groupId) throws SQLException {
+        MessageBean bean = new MessageBean(topic, msgType, groupId, null, null);
+        List<IMessage> messages = new ArrayList<>();
+        List<MessageBean> messageBeanList = bean.findMessages(tableName, template);
         for (MessageBean messageBean : messageBeanList) {
             IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
             MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
@@ -224,6 +238,24 @@ public class DefaultMessageStore implements IMessageStore {
                 messageBeanList.add(new MessageBean(map));
             }
             return messageBeanList;
+        }
+
+        public List<MessageBean> findMessages(String tableName, JdbcTemplate template) throws SQLException {
+            if (StringUtils.isBlank(tableName) || StringUtils.isBlank(topic) || StringUtils.isBlank(messageType)
+                    || StringUtils.isBlank(groupId)) {
+                throw new SQLException("tableName, topic, messageType, groupId cat not be null.");
+            }
+
+            String sql = String.format("select * from %s where topic = '%s' and messageType = '%s' and groupId = '%s'",
+                    tableName, topic, messageType, groupId);
+
+            List<Map<String, Object>> mapList =  template.queryForList(sql);
+            List<MessageBean> messageBeanList = new ArrayList<>();
+            for (Map map : mapList) {
+                messageBeanList.add(new MessageBean(map));
+            }
+            return messageBeanList;
+
         }
     }
 

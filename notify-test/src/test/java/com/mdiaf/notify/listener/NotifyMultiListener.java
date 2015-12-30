@@ -9,6 +9,6 @@ public class NotifyMultiListener extends AbstractRabbitMultiMessageListener {
     @Override
     public void handle(IMessage message) throws Exception {
         TestMessage testMessage = (TestMessage) message.getBody();
-//        System.out.println(testMessage);
+        throw new Exception("test");
     }
 }
