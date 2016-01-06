@@ -1,7 +1,10 @@
 package com.mdiaf.notify.listener;
 
 import com.mdiaf.notify.conf.Configuration;
+import com.mdiaf.notify.conf.IChannel;
+import com.mdiaf.notify.conf.RabbitChannel;
 import com.mdiaf.notify.message.IMessage;
+import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
 import com.mdiaf.notify.store.DefaultMessageStore;
 import com.mdiaf.notify.store.IMessageStore;
 import com.mdiaf.notify.store.JDBCTemplateFactory;
@@ -39,6 +42,9 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
      * as routing key
      */
     protected volatile String messageType;
+
+    private volatile String DLQ;
+    private volatile String queue;
     /**
      * as queue name
      */
@@ -46,7 +52,6 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     private volatile Channel channel;
 
-    private Timer timer;
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
     private final static String STORE_NAME = "consumer_";
 
@@ -81,6 +86,9 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             throw new Exception("missing parameters in your messageListener config");
         }
 
+        this.queue = groupId + "." + messageType;
+        this.DLQ = queue + ".DLQ";
+
         setMessageStore();
         setChannel();
         setConsumer();
@@ -89,6 +97,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     }
 
     private void setTimer(){
+        Timer timer;
         synchronized (NUMBER) {
             NUMBER.incrementAndGet();
             timer = new Timer("messageListener-"+NUMBER.intValue(), true);
@@ -124,20 +133,19 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     }
 
     private void setChannel() throws IOException {
-        String queueName = groupId + "." + messageType;
         Connection conn = connectionFactory.createConnection();
         channel = conn.createChannel(false);
         //给监听的队列声明一个死信队列
-        channel.queueDeclare(queueName + ".DLQ", true, false, true, null);
-        channel.queueBind(queueName + ".DLQ", topic, queueName + ".DLQ");
+        channel.queueDeclare(DLQ, true, false, true, null);
+        channel.queueBind(DLQ, topic, DLQ);
 
         //定义监听队列。
         Map<String , Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-routing-key", groupId + ".DLQ");
+        arguments.put("x-dead-letter-routing-key", DLQ);
         arguments.put("x-dead-letter-exchange", topic);
-        channel.queueDeclare(queueName, true, false, true, arguments);
+        channel.queueDeclare(queue, true, false, true, arguments);
         //设置监听队列
-        channel.queueBind(queueName, topic, messageType);
+        channel.queueBind(queue, topic, messageType);
 
     }
 
@@ -188,6 +196,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
                         if (wrapper.getCount() >= AbstractRabbitMessageListener.this.configuration.getMaxResend()) {
                             AbstractRabbitMessageListener.this.configuration.getReturnListener().handleReturn(message);
+                            sendToDLQ(message);
                             AbstractRabbitMessageListener.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
                             continue;
                         }
@@ -207,6 +216,11 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
             } catch (Exception e) {
                 logger.error("[NOTIFY]sendTimer error.", e);
             }
+        }
+
+        private void sendToDLQ(IMessage message) throws IOException {
+            AbstractRabbitMessageListener.this.
+                    channel.basicPublish(topic, DLQ, true, RabbitMQPropertiesConverter.fromMessage(message).build(), message.toBytes());
         }
     }
 }

@@ -99,6 +99,7 @@ public class DefaultMessageStore implements IMessageStore {
         private String messageType;
         private String groupId;
         private String uniqueId;
+        private long deliveryTag;
         private byte[] message;
         private Integer times;
         private Integer createTime;

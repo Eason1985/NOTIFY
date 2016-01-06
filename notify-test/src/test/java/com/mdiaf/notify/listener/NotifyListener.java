@@ -14,8 +14,8 @@ public class NotifyListener extends AbstractRabbitMessageListener {
     @Override
     public void handle(IMessage message) throws Exception {
         TestMessage testMessage = (TestMessage) message.getBody();
-        logger.error("[NOTIFY]handle:"+testMessage);
-        throw new Exception("test");
+        System.err.println("[NOTIFY]NotifyListener:" + testMessage);
+//        throw new Exception("test");
     }
 
 }
