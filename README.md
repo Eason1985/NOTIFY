@@ -1,6 +1,9 @@
 消息通信中间件
------1.0 
+
+V1.0
+
 概念：
+
 1、messageType 消息名称。消息的最小分类属性，每个消息必须有一个可供订阅和发布的名称，并且在topic内唯一。 多个同类的messageType可以整合
 
 2、topic
@@ -18,15 +21,19 @@
 
 
 组件： 
+
 sender：支持普通消息发送、消息延迟发送。 
+
 listener：支持单一消息接收，支持单一topic下所有消息接收。 
+
 默认情况下，listener消费异常，MQ会重复发送X(可配置)次。如果消费不掉，则进入死信队列。支持死信重发
 
 RabbitMQ 需安装如下plugin：
  rabbitmq_shovel 
  rabbitmq_shovel_management
  
----- 1.1
+V1.1
+
 sender具备了message comfirm的能力，确保消息不会因为投递过程失败而丢失
 
 新增了本地存储功能，增强了因为消费消息不成功导致消息丢失的情况
