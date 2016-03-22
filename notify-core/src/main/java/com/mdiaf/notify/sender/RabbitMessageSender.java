@@ -4,12 +4,10 @@ import com.mdiaf.notify.conf.Configuration;
 import com.mdiaf.notify.conf.IChannel;
 import com.mdiaf.notify.conf.RabbitChannel;
 import com.mdiaf.notify.message.IMessage;
-import com.mdiaf.notify.store.DefaultMessageStore;
 import com.mdiaf.notify.store.IMessageStore;
-import com.mdiaf.notify.store.JDBCTemplateFactory;
+import com.mdiaf.notify.store.MessageStoreManager;
 import com.mdiaf.notify.store.MessageWrapper;
 import com.mdiaf.notify.utils.IPUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -38,13 +36,6 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
 
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
     private final static String STORE_NAME = "producer_";
-
-    /**
-     * local or remote
-     */
-    private final static String MODE_LOCAL = "local";
-    private final static String MODE_REMOTE = "remote";
-    private String mode = MODE_LOCAL;//default is local
 
     @Override
     public void send(IMessage message, String topic, String messageType) throws IOException {
@@ -91,13 +82,6 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
         this.configuration = configuration;
     }
 
-    public void setMode(String mode) {
-        if (StringUtils.isBlank(mode)) {
-            return;
-        }
-        this.mode = mode;
-    }
-
     @Override
     public void afterPropertiesSet() throws Exception {
         setMessageStore();
@@ -118,15 +102,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
     private void setMessageStore() {
         String key = String.valueOf(IPUtil.ipToLong(connectionFactory.getHost()));
         String tableName = STORE_NAME + key;
-        if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
-            messageStore = new DefaultMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()),
-                    tableName);
-        }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
-            messageStore = new DefaultMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()),
-                    tableName);
-        }else {
-            throw new RuntimeException("mode must in (local, remote)");
-        }
+        messageStore = MessageStoreManager.getOrCreate(configuration, tableName);
     }
 
     private void setConfiguration() {

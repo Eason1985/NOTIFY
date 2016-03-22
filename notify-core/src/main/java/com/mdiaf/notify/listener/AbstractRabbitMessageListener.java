@@ -1,14 +1,9 @@
 package com.mdiaf.notify.listener;
 
 import com.mdiaf.notify.conf.Configuration;
-import com.mdiaf.notify.conf.IChannel;
-import com.mdiaf.notify.conf.RabbitChannel;
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
-import com.mdiaf.notify.store.DefaultMessageStore;
-import com.mdiaf.notify.store.IMessageStore;
-import com.mdiaf.notify.store.JDBCTemplateFactory;
-import com.mdiaf.notify.store.MessageWrapper;
+import com.mdiaf.notify.store.*;
 import com.mdiaf.notify.utils.IPUtil;
 import com.rabbitmq.client.Channel;
 import org.apache.commons.lang3.StringUtils;
@@ -57,13 +52,6 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     protected Configuration configuration = new Configuration();
 
-    /**
-     * local or remote
-     */
-    private final static String MODE_LOCAL = "local";
-    private final static String MODE_REMOTE = "remote";
-    private String mode = MODE_LOCAL;//default is local
-
     public void setTopic(String topic) {
         this.topic = topic;
     }
@@ -110,22 +98,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     private void setMessageStore() {
         String key = String.valueOf(IPUtil.ipToLong(connectionFactory.getHost()));
         String tableName = STORE_NAME + key;
-        if (MODE_LOCAL.equalsIgnoreCase(this.mode)) {
-            messageStore = new DefaultMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()),
-                    tableName);
-        }else if (MODE_REMOTE.equalsIgnoreCase(this.mode)) {
-            messageStore = new DefaultMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()),
-                    tableName);
-        }else {
-            throw new RuntimeException("mode must in (local, remote)");
-        }
-    }
-
-    public void setMode(String mode) {
-        if (StringUtils.isBlank(mode)) {
-            return;
-        }
-        this.mode = mode;
+        messageStore = MessageStoreManager.getOrCreate(configuration, tableName);
     }
 
     public void setConfiguration(Configuration configuration) {

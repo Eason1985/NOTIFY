@@ -14,6 +14,7 @@ public class Configuration {
     private int maxResend;
     private long timerDelay;
     private String url;
+    private String mode;//default is local
     /**
      * resend per time by unit of second .
      */
@@ -81,5 +82,13 @@ public class Configuration {
             return timerDelay;
         }
         return TIMER_DELAY;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 }
