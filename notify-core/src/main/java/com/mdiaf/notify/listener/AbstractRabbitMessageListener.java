@@ -73,8 +73,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         if (StringUtils.isBlank(topic) || StringUtils.isBlank(messageType) || StringUtils.isBlank(groupId)){
             throw new Exception("missing parameters in your messageListener config");
         }
-
-        this.queue = groupId + "." + messageType;
+        //todo 为了不与1.0版本冲突，在所有queue前新增前缀
+        this.queue = "V-" + groupId + "." + messageType;
         this.DLQ = queue + ".DLQ";
 
         setMessageStore();
@@ -123,9 +123,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
     }
 
     protected void setConsumer() throws IOException {
-        String queueName = groupId + "." + messageType;
         channel.basicQos(1);// 均衡投递
-        channel.basicConsume(queueName, false, new DefaultConsumer(channel, messageStore, this, groupId, topic, messageType));
+        channel.basicConsume(queue, false, new DefaultConsumer(channel, messageStore, this, groupId, topic, messageType));
     }
 
     private class HeartbeatTimer extends TimerTask {
