@@ -15,9 +15,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,6 +32,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
 
     private IMessageStore messageStore;
 
+    private final static Map<String, IMessageSender> messageSenderHolder = new HashMap<>();
     private final static AtomicInteger NUMBER = new AtomicInteger(0);
     private final static String STORE_NAME = "producer_";
 
@@ -84,9 +83,16 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        setMessageStore();
-        setConfiguration();
-        setTimer();
+        synchronized (messageSenderHolder) {
+            if (messageSenderHolder.containsKey(connectionFactory.getHost())) {
+                throw new RuntimeException("Only one sender per connectionFactory here.please check your config and confirm it.");
+            }
+            setMessageStore();
+            setConfiguration();
+            setTimer();
+            messageSenderHolder.put(connectionFactory.getHost(), this);
+        }
+
     }
 
     private void setTimer() {

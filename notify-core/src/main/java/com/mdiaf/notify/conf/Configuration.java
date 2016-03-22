@@ -18,7 +18,7 @@ public class Configuration {
     /**
      * resend per time by unit of second .
      */
-    private final static int DEFAULT_RESEND_PERIOD = 30;
+    private final static int DEFAULT_RESEND_PERIOD = 60;
 
     private final static int DEFAULT_MAX_RESEND = 3;
 
