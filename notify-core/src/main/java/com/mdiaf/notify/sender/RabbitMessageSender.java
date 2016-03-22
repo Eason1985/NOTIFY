@@ -147,7 +147,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
                 List<IMessage> messageList = RabbitMessageSender.this.messageStore.
                         findMomentBefore(RabbitMessageSender.this.configuration.getResendPeriod());
 
-                if (logger.isInfoEnabled()) {
+                if (logger.isDebugEnabled()) {
                     logger.info("[NOTIFY] {} messages wait for resend", messageList.size());
                 }
 
