@@ -47,4 +47,8 @@ public class MessageWrapper implements IMessageWrapper {
     public byte[] toBytes() {
         return message.toBytes();
     }
+
+    public IMessage getIMessage() {
+        return message;
+    }
 }

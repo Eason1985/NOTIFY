@@ -131,18 +131,18 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
                     if (message instanceof MessageWrapper) {
                         MessageWrapper wrapper = (MessageWrapper) message;
                         if (wrapper.getCount() >= RabbitMessageSender.this.configuration.getMaxResend()) {
-                            RabbitMessageSender.this.configuration.getReturnListener().handleReturn(message);
-                            RabbitMessageSender.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
+                            RabbitMessageSender.this.configuration.getReturnListener().handleReturn(wrapper.getIMessage());
+                            RabbitMessageSender.this.messageStore.deleteByUniqueId(wrapper.getHeader().getUniqueId());
                             continue;
                         }
 
                         if (wrapper.getHeader().getDelay() > 0) {
-                            RabbitMessageSender.this.expireSend(message, message.getHeader().getTopic(),
-                                    message.getHeader().getType(), wrapper.getHeader().getDelay());
+                            RabbitMessageSender.this.expireSend(wrapper.getIMessage(), wrapper.getHeader().getTopic(),
+                                    wrapper.getHeader().getType(), wrapper.getHeader().getDelay());
                             continue;
                         }
 
-                        RabbitMessageSender.this.send(message, message.getHeader().getTopic(), message.getHeader().getType());
+                        RabbitMessageSender.this.send(wrapper.getIMessage(), wrapper.getHeader().getTopic(), wrapper.getHeader().getType());
                     }else {
                         //todo
                     }

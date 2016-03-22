@@ -167,18 +167,18 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                         }
 
                         if (wrapper.getCount() >= AbstractRabbitMessageListener.this.configuration.getMaxResend()) {
-                            AbstractRabbitMessageListener.this.configuration.getReturnListener().handleReturn(message);
-                            sendToDLQ(message);
-                            AbstractRabbitMessageListener.this.messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
+                            AbstractRabbitMessageListener.this.configuration.getReturnListener().handleReturn(wrapper.getIMessage());
+                            sendToDLQ(wrapper.getIMessage());
+                            AbstractRabbitMessageListener.this.messageStore.deleteByUniqueId(wrapper.getHeader().getUniqueId());
                             continue;
                         }
 
                         try {
-                            handle(message);
-                            messageStore.deleteByUniqueId(message.getHeader().getUniqueId());
+                            handle(wrapper.getIMessage());
+                            messageStore.deleteByUniqueId(wrapper.getHeader().getUniqueId());
                         }catch (Exception e) {
                             logger.error("[NOTIFY]timer handle error.", e);
-                            messageStore.saveOrUpdate(message);
+                            messageStore.saveOrUpdate(wrapper.getIMessage());
                         }
 
                     }else {
