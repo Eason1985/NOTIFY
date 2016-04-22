@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Eason on 15/11/17.
@@ -62,7 +63,7 @@ public class RabbitChannel implements IChannel {
         try {
             delegate.close();
             noConfirms.clear();
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             logger.warn("[NOTIFY]{}", e.getMessage());
         }
 
@@ -114,10 +115,10 @@ public class RabbitChannel implements IChannel {
 
     @Override
     public void send(IMessage message, String topic, String messageType) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("[NOTIFY]send=>[header:{}]",
-                    message.getHeader().toString());
-        }
+//        if (logger.isDebugEnabled()) {
+//            logger.debug("[NOTIFY]send=>[header:{}]",
+//                    message.getHeader().toString());
+//        }
 
         delegate.basicPublish(topic, messageType, true, RabbitMQPropertiesConverter.fromMessage(message).build(), message.toBytes());
         noConfirms.put(delegate.getNextPublishSeqNo() - 1, message.getHeader().getUniqueId());
@@ -151,11 +152,11 @@ public class RabbitChannel implements IChannel {
                 logger.warn("[NOTIFY]deliveryTag:{} not in the noConfirms.", deliveryTag);
                 return;
             }
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("[NOTIFY]confirm=>deliveryTag={},channelNum={}, uniqueId={}"
-                        , deliveryTag, delegate.getChannelNumber(), uniqueId);
-            }
+//
+//            if (logger.isDebugEnabled()) {
+//                logger.debug("[NOTIFY]confirm=>deliveryTag={},channelNum={}, uniqueId={}"
+//                        , deliveryTag, delegate.getChannelNumber(), uniqueId);
+//            }
 
             confirmListener.handleAck(uniqueId);
             noConfirms.remove(deliveryTag);

@@ -97,8 +97,8 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     private void setMessageStore() {
         String key = String.valueOf(IPUtil.ipToLong(connectionFactory.getHost()));
-        String tableName = STORE_NAME + key;
-        messageStore = MessageStoreManager.getOrCreate(configuration, tableName);
+        String name = STORE_NAME + key;
+        messageStore = MessageStoreManager.getOrCreate(configuration, name);
     }
 
     public void setConfiguration(Configuration configuration) {

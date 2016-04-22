@@ -18,7 +18,6 @@
         <property name="connectionFactory" ref="connectionFactory" />
         <property name="configuration">
             <bean class="com.mdiaf.notify.conf.Configuration" >
-                <property name="maxResend" value="3" />
                 <property name="returnListener" ref="listenerTest" />
                 <property name="timerDelay" value="1000" />
             </bean>
@@ -38,7 +37,6 @@
     <property name="topic" value="eason-exchange" />
     <property name="configuration">
         <bean class="com.mdiaf.notify.conf.Configuration" >
-            <property name="maxResend" value="3" />
             <property name="returnListener" ref="listenerTest" />
         </bean>
     </property>

@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * use the SQLite
- * Created by Eason on 15/11/14.
- */
+* use the SQLite
+* Created by Eason on 15/11/14.
+*/
 public enum JDBCTemplateFactory {
 
     LOCAL("LOCAL"), REMOTE("REMOTE");

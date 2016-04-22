@@ -14,7 +14,9 @@ import org.springframework.jdbc.support.lob.LobCreator;
 import org.springframework.jdbc.support.lob.LobHandler;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +30,11 @@ public class DefaultMessageStore implements IMessageStore {
 
     private final static Logger logger = LoggerFactory.getLogger(IMessageStore.class);
 
-    private final JdbcTemplate template;
+    private final IDataSource dataSource;
     private final String tableName;
 
-    public DefaultMessageStore(JdbcTemplate jdbcTemplate, String tableName) {
-        this.template = jdbcTemplate;
+    public DefaultMessageStore(IDataSource dataSource, String tableName) {
+        this.dataSource = dataSource;
         this.tableName = tableName;
         init();
     }
@@ -42,20 +44,22 @@ public class DefaultMessageStore implements IMessageStore {
         MessageBean bean = new MessageBean(message.getHeader().getTopic(),
                 message.getHeader().getType(), message.getHeader().getGroupId(),
                 message.getHeader().getUniqueId(), message.toBytes());
+        bean.setTableName(tableName);
 
-        MessageBean messageBean = bean.findByUniqueId(tableName, template);
-        if (messageBean != null){
-            bean.incTimes(tableName, template);
-        }else {
-            bean.insert(tableName, template);
+        MessageBean messageBean = bean.findByUniqueId(dataSource);
+        if (messageBean != null) {
+            bean.incTimes(dataSource);
+        } else {
+            bean.insert(dataSource);
         }
     }
 
     @Override
-    public List<IMessage> findMomentBefore(long seconds) {
+    public List<IMessage> findMomentBefore(long seconds) throws SQLException {
         MessageBean bean = new MessageBean();
+        bean.setTableName(tableName);
         List<IMessage> messages = new ArrayList<>();
-        List<MessageBean> messageBeanList = bean.findMomentBefore(tableName, seconds, template);
+        List<MessageBean> messageBeanList = bean.findMomentBefore(seconds, dataSource);
         for (MessageBean messageBean : messageBeanList) {
             IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
             MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
@@ -67,8 +71,9 @@ public class DefaultMessageStore implements IMessageStore {
     @Override
     public List<IMessage> findMessages(String topic, String msgType, String groupId) throws SQLException {
         MessageBean bean = new MessageBean(topic, msgType, groupId, null, null);
+        bean.setTableName(tableName);
         List<IMessage> messages = new ArrayList<>();
-        List<MessageBean> messageBeanList = bean.findMessages(tableName, template);
+        List<MessageBean> messageBeanList = bean.findMessages(dataSource);
         for (MessageBean messageBean : messageBeanList) {
             IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
             MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
@@ -80,20 +85,26 @@ public class DefaultMessageStore implements IMessageStore {
     @Override
     public void deleteByUniqueId(String uniqueId) throws SQLException {
         MessageBean bean = new MessageBean(null, null, null, uniqueId, null);
-        bean.deleteByUniqueId(tableName, template);
+        bean.setTableName(tableName);
+        bean.deleteByUniqueId(dataSource);
     }
 
     private void init() {
         logger.info("[NOTIFY]messageStore init,tableName={}", tableName);
-        checkOrCreateTable();
+        try {
+            checkOrCreateTable();
+        } catch (SQLException e) {
+            throw new RuntimeException("init local store error.", e);
+        }
     }
 
-    private void checkOrCreateTable() {
+    private void checkOrCreateTable() throws SQLException {
         MessageBean bean = new MessageBean();
-        bean.createTable(tableName, template);
+        bean.setTableName(tableName);
+        bean.createTable(dataSource);
     }
 
-    private class MessageBean implements Serializable{
+    private class MessageBean implements Serializable {
         private static final long serialVersionUID = 4836496186954452826L;
         private String topic;
         private String messageType;
@@ -104,6 +115,8 @@ public class DefaultMessageStore implements IMessageStore {
         private Integer times;
         private Integer createTime;
         private Integer modifyTime;
+
+        private String tableName;
 
         public MessageBean(String topic, String messageType, String groupId, String uniqueId, byte[] message) {
             this.topic = topic;
@@ -160,7 +173,15 @@ public class DefaultMessageStore implements IMessageStore {
             return uniqueId;
         }
 
-        public void createTable(String tableName, JdbcTemplate template) {
+        public String getTableName() {
+            return tableName;
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
+        }
+
+        public void createTable(IDataSource dataSource) throws SQLException {
             Validate.notNull(tableName, "tableName is required!");
 
             String sql = String.format("create TABLE if not EXISTS %s " +
@@ -171,11 +192,11 @@ public class DefaultMessageStore implements IMessageStore {
                     "message BLOB , " +
                     "times INTEGER NOT NULL DEFAULT 1 , " +
                     "createTime INTEGER NOT NULL DEFAULT (strftime('%%s','now')) , " +
-                    "modifyTime INTEGER NOT NULL DEFAULT (strftime('%%s','now')))" , tableName);
-            template.execute(sql);
+                    "modifyTime INTEGER NOT NULL DEFAULT (strftime('%%s','now')))", tableName);
+            execute(sql, dataSource);
         }
 
-        public Integer insert(String tableName, JdbcTemplate template) {
+        public Integer insert(IDataSource dataSource) throws SQLException {
             Validate.notNull(tableName, "tableName is required!");
 
             String sql = String.format(
@@ -183,65 +204,54 @@ public class DefaultMessageStore implements IMessageStore {
                             "(uniqueId, topic, messageType, groupId, message, times)" +
                             "VALUES" +
                             "(? , ? , ? , ? , ? , ? )", tableName);
-
-
-            final LobHandler lobHandler=new DefaultLobHandler();
-            return template.execute(sql, new AbstractLobCreatingPreparedStatementCallback(lobHandler){
-                @Override
-                protected void setValues(PreparedStatement ps, LobCreator lobCreator) throws SQLException, DataAccessException {
-                    ps.setString(1, uniqueId);
-                    ps.setString(2, topic);
-                    ps.setString(3, messageType);
-                    ps.setString(4, groupId);
-                    ps.setBytes(5, message);
-                    ps.setInt(6, 1);
-                }
-            });
+            Connection connection = dataSource.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, uniqueId);
+            preparedStatement.setString(2, topic);
+            preparedStatement.setString(3, messageType);
+            preparedStatement.setString(4, groupId);
+            preparedStatement.setBytes(5, message);
+            preparedStatement.setInt(6, 1);
+            int re = preparedStatement.executeUpdate();
+            dataSource.release(connection);
+            return re;
         }
 
-        public void deleteByUniqueId(String tableName, JdbcTemplate template) {
+        public void deleteByUniqueId(IDataSource dataSource) throws SQLException {
             Validate.notNull(tableName, "tableName is required!");
 
             String sql = String.format("delete from %s " +
                             "where uniqueId = '%s'",
                     tableName, uniqueId);
-            template.execute(sql);
+            execute(sql, dataSource);
         }
 
-        public MessageBean findByUniqueId(String tableName, JdbcTemplate template) {
+        public MessageBean findByUniqueId(IDataSource dataSource) throws SQLException {
             Validate.notNull(tableName, "tableName is required!");
             Validate.notNull(tableName, "uniqueId is required!");
 
             String sql = String.format("select * from %s where uniqueId = '%s'", tableName, uniqueId);
-            List<Map<String, Object>> mapList = template.queryForList(sql);
-            if (mapList.size() > 0) {
-                return new MessageBean(mapList.get(0));
-            }
-            return null;
+            List<MessageBean> list = queryForList(sql, dataSource);
+            return list.size() > 0 ? list.get(0) : null;
         }
 
-        public void incTimes(String tableName, JdbcTemplate template) {
+        public void incTimes(IDataSource dataSource) throws SQLException {
             Validate.notNull(tableName, "tableName is required!");
             Validate.notNull(tableName, "uniqueId is required!");
 
-            String sql =  String.format("update %s " +
+            String sql = String.format("update %s " +
                     "set times = times + 1, " +
                     "modifyTime = strftime('%%s','now') " +
                     "where uniqueId = '%s'", tableName, uniqueId);
-            template.execute(sql);
+            execute(sql, dataSource);
         }
 
-        public List<MessageBean> findMomentBefore(String tableName, long seconds, JdbcTemplate template) {
-            String sql = String.format("select * from %s where createTime <= ?", tableName);
-            List<Map<String, Object>> mapList =  template.queryForList(sql, System.currentTimeMillis() / 1000 - seconds);
-            List<MessageBean> messageBeanList = new ArrayList<>();
-            for (Map map : mapList) {
-                messageBeanList.add(new MessageBean(map));
-            }
-            return messageBeanList;
+        public List<MessageBean> findMomentBefore(long seconds, IDataSource dataSource) throws SQLException {
+            String sql = String.format("select * from %s where createTime <= %d", tableName, seconds);
+            return queryForList(sql, dataSource);
         }
 
-        public List<MessageBean> findMessages(String tableName, JdbcTemplate template) throws SQLException {
+        public List<MessageBean> findMessages(IDataSource dataSource) throws SQLException {
             if (StringUtils.isBlank(tableName) || StringUtils.isBlank(topic) || StringUtils.isBlank(messageType)
                     || StringUtils.isBlank(groupId)) {
                 throw new SQLException("tableName, topic, messageType, groupId cat not be null.");
@@ -249,14 +259,31 @@ public class DefaultMessageStore implements IMessageStore {
 
             String sql = String.format("select * from %s where topic = '%s' and messageType = '%s' and groupId = '%s'",
                     tableName, topic, messageType, groupId);
+            return queryForList(sql, dataSource);
+        }
 
-            List<Map<String, Object>> mapList =  template.queryForList(sql);
+        private void execute(String sql, IDataSource dataSource) throws SQLException {
+            Connection connection = dataSource.getConnection();
+            connection.createStatement().execute(sql);
+            dataSource.release(connection);
+        }
+
+        private List<MessageBean> queryForList(String sql, IDataSource dataSource) throws SQLException {
+            Connection connection = dataSource.getConnection();
+            ResultSet resultSet = connection.createStatement().executeQuery(sql);
+            dataSource.release(connection);
+
             List<MessageBean> messageBeanList = new ArrayList<>();
-            for (Map map : mapList) {
-                messageBeanList.add(new MessageBean(map));
+
+            while (resultSet.next()) {
+                MessageBean bean = new MessageBean(resultSet.getNString("topic"),
+                        resultSet.getString("messageType"),
+                        resultSet.getString("groupId"),
+                        resultSet.getString("uniqueId"),
+                        resultSet.getBytes("message"));
+                messageBeanList.add(bean);
             }
             return messageBeanList;
-
         }
     }
 

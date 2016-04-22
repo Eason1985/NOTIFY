@@ -99,7 +99,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
         Timer timer;
         synchronized (NUMBER) {
             NUMBER.incrementAndGet();
-            timer = new Timer("messageSendTimer-"+NUMBER.intValue(), true);
+            timer = new Timer("messageSendTimer-" + NUMBER.intValue(), true);
         }
 
         timer.schedule(new SenderTimer(), configuration.getTimerDelay(), Configuration.SENDER_TIMER_PERIOD);
@@ -107,8 +107,8 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
 
     private void setMessageStore() {
         String key = String.valueOf(IPUtil.ipToLong(connectionFactory.getHost()));
-        String tableName = STORE_NAME + key;
-        messageStore = MessageStoreManager.getOrCreate(configuration, tableName);
+        String name = STORE_NAME + key;
+        messageStore = MessageStoreManager.getOrCreate(configuration, name);
     }
 
     private void setConfiguration() {
@@ -149,7 +149,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
                         }
 
                         RabbitMessageSender.this.send(wrapper.getIMessage(), wrapper.getHeader().getTopic(), wrapper.getHeader().getType());
-                    }else {
+                    } else {
                         //todo
                     }
                 }

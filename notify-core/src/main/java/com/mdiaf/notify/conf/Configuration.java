@@ -9,12 +9,15 @@ import com.mdiaf.notify.sender.IReturnListener;
  */
 public class Configuration {
 
+    public static final String MODE_LOCAL = "local";
+    public static final String MODE_REMOTE = "remote";
+
     private IReturnListener returnListener;
     private IConfirmListener confirmListener;
     private int maxResend;
     private long timerDelay;
     private String url;
-    private String mode;//default is local
+    private String mode = MODE_LOCAL;//default is local
     /**
      * resend per time by unit of second .
      */

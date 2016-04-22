@@ -3,6 +3,7 @@ package com.mdiaf.notify.store;
 import com.mdiaf.notify.conf.Configuration;
 import org.apache.commons.lang3.StringUtils;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,37 +13,27 @@ import java.util.Map;
 public class MessageStoreManager {
 
     private static final Map<String, IMessageStore> messageStoreHolder = new HashMap<>();
-    /**
-     * local or remote
-     */
-    private final static String MODE_LOCAL = "local";
-    private final static String MODE_REMOTE = "remote";
 
-    public static IMessageStore getOrCreate(Configuration configuration, String tableName) {
+    public static IMessageStore getOrCreate(Configuration configuration, String name) {
 
         synchronized (messageStoreHolder) {
-            if (messageStoreHolder.containsKey(tableName)) {
-                return messageStoreHolder.get(tableName);
+            if (messageStoreHolder.containsKey(name)) {
+                return messageStoreHolder.get(name);
             }
 
-            IMessageStore messageStore = create(configuration, tableName);
-            messageStoreHolder.put(tableName, messageStore);
-            return messageStore;
+            try {
+                IMessageStore messageStore = create(configuration, name);
+                messageStoreHolder.put(name, messageStore);
+                return messageStore;
+            } catch (SQLException e) {
+                throw new RuntimeException("create messageStore error.", e);
+            }
         }
 
     }
 
-    private static IMessageStore create(Configuration configuration, String tableName) {
-
-        if (StringUtils.isBlank(configuration.getMode()) || MODE_LOCAL.equalsIgnoreCase(configuration.getMode())) {
-            return new DefaultMessageStore(JDBCTemplateFactory.LOCAL.getJdbcTemplate(configuration.getUrl()), tableName);
-        }
-
-        if (MODE_REMOTE.equalsIgnoreCase(configuration.getMode())) {
-            new DefaultMessageStore(JDBCTemplateFactory.REMOTE.getJdbcTemplate(configuration.getUrl()),
-                    tableName);
-        }
-
-        throw new RuntimeException("mode must in (local, remote)");
+    private static IMessageStore create(Configuration configuration, String name) throws SQLException {
+            IDataSource sqliteDataSource = DataSourceFactory.INSTANCE.getOrCreate(configuration.getMode(), name);
+            return new DefaultMessageStore(sqliteDataSource, name);
     }
 }

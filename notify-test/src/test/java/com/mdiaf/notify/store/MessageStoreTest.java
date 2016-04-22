@@ -1,8 +1,8 @@
 package com.mdiaf.notify.store;
 
+import com.mdiaf.notify.conf.Configuration;
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.message.ObjectMessage;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.testng.Assert;
 
 import java.util.List;
@@ -12,22 +12,23 @@ import java.util.List;
  */
 public class MessageStoreTest {
 
-    private static JdbcTemplate jdbcTemplate = JDBCTemplateFactory.LOCAL.getJdbcTemplate("");
-
     private IMessageStore messageStore;
 
     @org.testng.annotations.BeforeMethod
     public void setUp() throws Exception {
-        messageStore = new TestMessageStore(jdbcTemplate);
-        jdbcTemplate.execute("delete from test");
+        Configuration configuration = new Configuration();
+        messageStore = MessageStoreManager.getOrCreate(configuration, "test");
+        messageStore.deleteByUniqueId("1");
     }
 
     @org.testng.annotations.Test
     public void testSave() throws Exception {
         String msg = "hello world";
         IMessage message = new ObjectMessage(msg);
+        message.getHeader().setUniqueId("1");
         messageStore.saveOrUpdate(message);
         messageStore.saveOrUpdate(message);
+
         List<IMessage> list = messageStore.findMomentBefore(0);
         Assert.assertEquals(list.size(), 1);
         IMessage message1 = list.get(0);
@@ -53,11 +54,4 @@ public class MessageStoreTest {
 
     }
 
-    public class TestMessageStore extends DefaultMessageStore {
-
-        public TestMessageStore(JdbcTemplate jdbcTemplate) {
-            super(jdbcTemplate, "test");
-        }
-
-    }
 }

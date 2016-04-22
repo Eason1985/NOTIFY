@@ -26,7 +26,7 @@ public class LocalStoreConfirmListener implements IConfirmListener {
             messageStore.deleteByUniqueId(msgUnique);
             // if handleAck fault,we will resend this message again by a timer.
         } catch (SQLException e) {
-            logger.warn("[NOTIFY]handleAck fault.cause:"+e.getErrorCode(), e);
+            logger.warn("[NOTIFY]handleAck fault.cause:" + e.getErrorCode(), e);
             throw new LocalStoreException(e);
         }
     }
