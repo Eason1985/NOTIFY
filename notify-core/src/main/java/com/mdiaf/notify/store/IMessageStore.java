@@ -16,6 +16,7 @@ public interface IMessageStore {
 
     /**
      * find out some message which be send sometime before.
+     *
      * @param seconds
      * @return
      * @throws SQLException

@@ -5,7 +5,6 @@ import com.mdiaf.notify.sender.IConfirmListener;
 import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -125,11 +124,11 @@ public class RabbitChannel implements IChannel {
     }
 
     @Override
-    public void  expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
-        String delayMessageType = messageType + ".delay."+delay;
+    public void expireSend(IMessage message, String topic, String messageType, long delay) throws IOException {
+        String delayMessageType = messageType + ".delay." + delay;
         Map<String, Object> args = new HashMap<>();
-        args.put("x-message-ttl" , delay);
-        args.put("x-dead-letter-exchange" , topic);
+        args.put("x-message-ttl", delay);
+        args.put("x-dead-letter-exchange", topic);
         args.put("x-dead-letter-routing-key", messageType);
         delegate.queueDeclare(delayMessageType, true, false, true, args);
         AMQP.BasicProperties.Builder builder = RabbitMQPropertiesConverter.fromMessage(message);

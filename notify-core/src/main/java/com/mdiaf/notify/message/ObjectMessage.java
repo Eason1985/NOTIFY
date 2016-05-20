@@ -15,7 +15,7 @@ public class ObjectMessage implements IMessage {
     private MessageHeader header;
 
     public ObjectMessage(Object body) {
-        if (body instanceof Serializable){
+        if (body instanceof Serializable) {
             this.body = SerializationUtil.serialize(body);
             header = new MessageHeader();
             return;

@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * Created by Eason on 15/10/4.
  */
-public class MessageHeader implements Serializable{
+public class MessageHeader implements Serializable {
 
     private static final long serialVersionUID = 2885523576543965689L;
 
@@ -63,19 +63,19 @@ public class MessageHeader implements Serializable{
         this.delay = delay;
     }
 
-    public void setProperty(String key , Object value){
+    public void setProperty(String key, Object value) {
         this.properties.put(key, value);
     }
 
-    public void setProperties(Map properties){
+    public void setProperties(Map properties) {
         this.properties.putAll(properties);
     }
 
-    public Object getProperty(String key){
+    public Object getProperty(String key) {
         return properties.get(key);
     }
 
-    public Map getProperties(){
+    public Map getProperties() {
         return properties;
     }
 

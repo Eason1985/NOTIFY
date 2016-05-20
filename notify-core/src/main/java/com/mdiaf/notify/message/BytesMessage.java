@@ -10,7 +10,7 @@ public class BytesMessage implements IMessage {
     private static final long serialVersionUID = 216737541369926910L;
     private volatile MessageHeader header;
 
-    private byte[] body ;
+    private byte[] body;
 
     public BytesMessage(byte[] body) {
         this.body = body;

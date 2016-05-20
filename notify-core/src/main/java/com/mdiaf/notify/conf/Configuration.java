@@ -29,10 +29,10 @@ public class Configuration {
     /**
      * make it small when you in test.
      */
-    private final static int TIMER_DELAY = 3*60*1000;
+    private final static int TIMER_DELAY = 3 * 60 * 1000;
 
-    public final static int SENDER_TIMER_PERIOD = 30*1000;
-    public final static int RECEIVED_TIMER_PERIOD = 30*1000;
+    public final static int SENDER_TIMER_PERIOD = 30 * 1000;
+    public final static int RECEIVED_TIMER_PERIOD = 30 * 1000;
 
     public int getResendPeriod() {
         return DEFAULT_RESEND_PERIOD;

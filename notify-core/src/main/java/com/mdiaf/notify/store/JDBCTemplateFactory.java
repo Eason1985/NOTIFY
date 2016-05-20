@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* use the SQLite
-* Created by Eason on 15/11/14.
-*/
+ * use the SQLite
+ * Created by Eason on 15/11/14.
+ */
 public enum JDBCTemplateFactory {
 
     LOCAL("LOCAL"), REMOTE("REMOTE");
@@ -35,7 +35,7 @@ public enum JDBCTemplateFactory {
         this.mode = mode;
     }
 
-    public synchronized JdbcTemplate getJdbcTemplate(final String url){
+    public synchronized JdbcTemplate getJdbcTemplate(final String url) {
         String path = StringUtils.isBlank(url) ? STORE_LOCAL_PATH : url;
         path += "/.SQLite";
         String key = mode + "_" + path;
@@ -66,7 +66,7 @@ public enum JDBCTemplateFactory {
             logger.info("[NOTIFY]init DataSource in path:{}", path);
         }
 
-        druidDataSource.setUrl("jdbc:sqlite:"+path+"/"+STORE_LOCAL_DB);
+        druidDataSource.setUrl("jdbc:sqlite:" + path + "/" + STORE_LOCAL_DB);
         try {
             druidDataSource.init();
             return druidDataSource;

@@ -7,7 +7,7 @@ import java.io.Serializable;
  * 包含 {@link Serializable} body 和 {@link MessageHeader} 两部分 <p>
  * Created by Eason on 15/10/4.
  */
-public interface IMessage extends Serializable{
+public interface IMessage extends Serializable {
 
     /**
      * @return messageHeader of the message
@@ -16,6 +16,7 @@ public interface IMessage extends Serializable{
 
     /**
      * set messageHeader
+     *
      * @param messageHeader
      */
     void setHeader(MessageHeader messageHeader);
@@ -28,7 +29,7 @@ public interface IMessage extends Serializable{
     /**
      * @return bytes of this object
      */
-    byte[] toBytes() ;
+    byte[] toBytes();
 
     //todo  extension property, just like org.springframework.amqp.core.MessageProperties
 //    MessageProperties getMessageProperties();

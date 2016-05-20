@@ -4,8 +4,6 @@ import com.mdiaf.notify.message.IMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  * Created by Eason on 15/10/4.
  */

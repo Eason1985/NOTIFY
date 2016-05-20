@@ -8,31 +8,34 @@ public class IPUtil {
 
     /**
      * 将字符串型ip转成int型ip
+     *
      * @param strIp
      * @return
      */
-    public static int Ip2Int(String strIp){
+    public static int Ip2Int(String strIp) {
         String[] ss = strIp.split("\\.");
-        if(ss.length != 4){
+        if (ss.length != 4) {
             return 0;
         }
         byte[] bytes = new byte[ss.length];
-        for(int i = 0; i < bytes.length; i++){
+        for (int i = 0; i < bytes.length; i++) {
             bytes[i] = (byte) Integer.parseInt(ss[i]);
         }
         return byte2Int(bytes);
     }
+
     /**
      * 将int型ip转成String型ip
+     *
      * @param intIp
      * @return
      */
-    public static String int2Ip(int intIp){
+    public static String int2Ip(int intIp) {
         byte[] bytes = int2byte(intIp);
         StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < 4; i++){
+        for (int i = 0; i < 4; i++) {
             sb.append(bytes[i] & 0xFF);
-            if(i < 3){
+            if (i < 3) {
                 sb.append(".");
             }
         }
@@ -47,6 +50,7 @@ public class IPUtil {
         bytes[3] = (byte) ((0xff000000 & i) >> 24);
         return bytes;
     }
+
     private static int byte2Int(byte[] bytes) {
         int n = bytes[0] & 0xFF;
         n |= ((bytes[1] << 8) & 0xFF00);
@@ -64,9 +68,9 @@ public class IPUtil {
         int position3 = strIp.indexOf(".", position2 + 1);
         //将每个.之间的字符串转换成整型
         ip[0] = Long.parseLong(strIp.substring(0, position1));
-        ip[1] = Long.parseLong(strIp.substring(position1+1, position2));
-        ip[2] = Long.parseLong(strIp.substring(position2+1, position3));
-        ip[3] = Long.parseLong(strIp.substring(position3+1));
+        ip[1] = Long.parseLong(strIp.substring(position1 + 1, position2));
+        ip[2] = Long.parseLong(strIp.substring(position2 + 1, position3));
+        ip[3] = Long.parseLong(strIp.substring(position3 + 1));
         return (ip[0] << 24) + (ip[1] << 16) + (ip[2] << 8) + ip[3];
     }
 

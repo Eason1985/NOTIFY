@@ -1,7 +1,6 @@
 package com.mdiaf.notify.store;
 
 import com.mdiaf.notify.conf.Configuration;
-import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public class MessageStoreManager {
     }
 
     private static IMessageStore create(Configuration configuration, String name) throws SQLException {
-            IDataSource sqliteDataSource = DataSourceFactory.INSTANCE.getOrCreate(configuration.getMode(), name);
-            return new DefaultMessageStore(sqliteDataSource, name);
+        IDataSource sqliteDataSource = DataSourceFactory.INSTANCE.getOrCreate(configuration.getMode(), name);
+        return new DefaultMessageStore(sqliteDataSource, name);
     }
 }

@@ -1,6 +1,9 @@
 package com.mdiaf.notify.sender;
 
-import com.mdiaf.notify.message.*;
+import com.mdiaf.notify.message.BytesMessage;
+import com.mdiaf.notify.message.IMessage;
+import com.mdiaf.notify.message.ObjectMessage;
+import com.mdiaf.notify.message.StringMessage;
 import com.mdiaf.notify.utils.SerializationUtil;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;

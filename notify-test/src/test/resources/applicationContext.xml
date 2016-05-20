@@ -14,32 +14,32 @@
             />
 
 
-    <bean id="messageSender" class="com.mdiaf.notify.sender.RabbitMessageSender" >
-        <property name="connectionFactory" ref="connectionFactory" />
+    <bean id="messageSender" class="com.mdiaf.notify.sender.RabbitMessageSender">
+        <property name="connectionFactory" ref="connectionFactory"/>
         <property name="configuration">
-            <bean class="com.mdiaf.notify.conf.Configuration" >
-                <property name="returnListener" ref="listenerTest" />
-                <property name="timerDelay" value="1000" />
+            <bean class="com.mdiaf.notify.conf.Configuration">
+                <property name="returnListener" ref="listenerTest"/>
+                <property name="timerDelay" value="1000"/>
             </bean>
         </property>
 
     </bean>
 
-    <bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyMultiListener" >
-    <property name="connectionFactory" ref="connectionFactory" />
-    <property name="groupId" value="eason_test_group2" />
-    <property name="messageTypes">
-        <list>
-            <value>eason_type_expire</value>
-            <value>eason_type_expire1</value>
-        </list>
-    </property>
-    <property name="topic" value="eason-exchange" />
-    <property name="configuration">
-        <bean class="com.mdiaf.notify.conf.Configuration" >
-            <property name="returnListener" ref="listenerTest" />
-        </bean>
-    </property>
+    <bean id="notifyListener" class="com.mdiaf.notify.listener.NotifyMultiListener">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="groupId" value="eason_test_group2"/>
+        <property name="messageTypes">
+            <list>
+                <value>eason_type_expire</value>
+                <value>eason_type_expire1</value>
+            </list>
+        </property>
+        <property name="topic" value="eason-exchange"/>
+        <property name="configuration">
+            <bean class="com.mdiaf.notify.conf.Configuration">
+                <property name="returnListener" ref="listenerTest"/>
+            </bean>
+        </property>
     </bean>
     <bean class="com.mdiaf.notify.sender.ReturnListenerTest" id="listenerTest"/>
 

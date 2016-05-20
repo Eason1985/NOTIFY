@@ -33,11 +33,11 @@ public enum DataSourceFactory {
     private IDataSource create(String mode, String name) throws SQLException {
         if (StringUtils.isBlank(mode) || Configuration.MODE_LOCAL.equalsIgnoreCase(mode)) {
             checkOrCreatePath(STORE_LOCAL_PATH);
-            String url = "jdbc:sqlite:"+STORE_LOCAL_PATH+"/"+name+".db";
+            String url = "jdbc:sqlite:" + STORE_LOCAL_PATH + "/" + name + ".db";
             return new SqliteDataSource(url);
         }
 
-        throw new RuntimeException("No support mode: "+mode+" yet");
+        throw new RuntimeException("No support mode: " + mode + " yet");
     }
 
     private void checkOrCreatePath(String url) {

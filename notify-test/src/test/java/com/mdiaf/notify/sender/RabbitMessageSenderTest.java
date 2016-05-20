@@ -14,10 +14,10 @@ import java.util.List;
 /**
  * Created by Eason on 15/10/4.
  */
-public class RabbitMessageSenderTest extends BaseTest{
+public class RabbitMessageSenderTest extends BaseTest {
 
     @Autowired
-    private IMessageSender messageSender ;
+    private IMessageSender messageSender;
 
     @org.testng.annotations.BeforeMethod
     public void setUp() throws Exception {
@@ -27,8 +27,8 @@ public class RabbitMessageSenderTest extends BaseTest{
     @org.testng.annotations.Test
     public void testSend() throws Exception {
         List<Thread> threads = new ArrayList<>();
-        for (int i =0;i < 100;i++) {
-            Thread t = new Thread(new MsgTest(), "msg+"+i);
+        for (int i = 0; i < 100; i++) {
+            Thread t = new Thread(new MsgTest(), "msg+" + i);
             t.start();
             threads.add(t);
         }
@@ -62,13 +62,13 @@ public class RabbitMessageSenderTest extends BaseTest{
 
     }
 
-    public class MsgTest implements Runnable{
+    public class MsgTest implements Runnable {
 
         @Override
         public void run() {
             int i = 0;
-            while (true){
-                ObjectMessage message = new ObjectMessage(new TestMessage(new Date() , i++));
+            while (true) {
+                ObjectMessage message = new ObjectMessage(new TestMessage(new Date(), i++));
 //                System.err.println("send expire:"+new Date());
                 try {
                     messageSender.send(message, "eason-exchange", "eason_type_expire");

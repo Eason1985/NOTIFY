@@ -1,9 +1,6 @@
 package com.mdiaf.notify.sender;
 
 import com.mdiaf.notify.message.IMessage;
-import com.rabbitmq.client.AMQP;
-
-import java.io.IOException;
 
 /**
  * if the message is delivered fault,then the returnListener will be invoke. <p>

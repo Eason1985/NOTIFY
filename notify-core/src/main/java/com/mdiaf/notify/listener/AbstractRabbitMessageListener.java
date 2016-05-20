@@ -3,7 +3,9 @@ package com.mdiaf.notify.listener;
 import com.mdiaf.notify.conf.Configuration;
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.sender.RabbitMQPropertiesConverter;
-import com.mdiaf.notify.store.*;
+import com.mdiaf.notify.store.IMessageStore;
+import com.mdiaf.notify.store.MessageStoreManager;
+import com.mdiaf.notify.store.MessageWrapper;
 import com.mdiaf.notify.utils.IPUtil;
 import com.rabbitmq.client.Channel;
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +21,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- *Just provide one listener per Topic and per messageType here.
+ * Just provide one listener per Topic and per messageType here.
  * Created by Eason on 15/9/26.
  */
-public abstract class AbstractRabbitMessageListener implements IMessageListener , InitializingBean {
+public abstract class AbstractRabbitMessageListener implements IMessageListener, InitializingBean {
 
     private final static Logger logger = LoggerFactory.getLogger(IMessageListener.class);
 
@@ -70,7 +72,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        if (StringUtils.isBlank(topic) || StringUtils.isBlank(messageType) || StringUtils.isBlank(groupId)){
+        if (StringUtils.isBlank(topic) || StringUtils.isBlank(messageType) || StringUtils.isBlank(groupId)) {
             throw new Exception("missing parameters in your messageListener config");
         }
         //todo 为了不与1.0版本冲突，在所有queue前新增前缀
@@ -84,11 +86,11 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         setTimer();
     }
 
-    private void setTimer(){
+    private void setTimer() {
         Timer timer;
         synchronized (NUMBER) {
             NUMBER.incrementAndGet();
-            timer = new Timer("messageListener-"+NUMBER.intValue(), true);
+            timer = new Timer("messageListener-" + NUMBER.intValue(), true);
         }
 
         timer.schedule(new HeartbeatTimer(), configuration.getTimerDelay(), 60 * 1000);
@@ -113,7 +115,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
         channel.queueBind(DLQ, topic, DLQ);
 
         //定义监听队列。
-        Map<String , Object> arguments = new HashMap<>();
+        Map<String, Object> arguments = new HashMap<>();
         arguments.put("x-dead-letter-routing-key", DLQ);
         arguments.put("x-dead-letter-exchange", topic);
         channel.queueDeclare(queue, true, false, true, arguments);
@@ -139,7 +141,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                 if (!channel.isOpen()) {
                     setChannel();
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 logger.error("[NOTIFY]HeartbeatTimer error.", e);
             }
         }
@@ -161,7 +163,7 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                     if (message instanceof MessageWrapper) {
                         MessageWrapper wrapper = (MessageWrapper) message;
                         if (wrapper.getSendTimestamp()
-                                > System.currentTimeMillis() / 1000 - AbstractRabbitMessageListener.this.configuration.getResendPeriod()){
+                                > System.currentTimeMillis() / 1000 - AbstractRabbitMessageListener.this.configuration.getResendPeriod()) {
                             // not yet
                             continue;
                         }
@@ -176,12 +178,12 @@ public abstract class AbstractRabbitMessageListener implements IMessageListener 
                         try {
                             handle(wrapper.getIMessage());
                             messageStore.deleteByUniqueId(wrapper.getHeader().getUniqueId());
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             logger.error("[NOTIFY]timer handle error.", e);
                             messageStore.saveOrUpdate(wrapper.getIMessage());
                         }
 
-                    }else {
+                    } else {
                         //todo
                     }
                 }
