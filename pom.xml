@@ -83,6 +83,24 @@
                 <artifactId>guava</artifactId>
                 <version>18.0</version>
             </dependency>
+
+            <!--<dependency>-->
+                <!--<groupId>org.iq80.leveldb</groupId>-->
+                <!--<artifactId>leveldb</artifactId>-->
+                <!--<version>0.7</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>org.iq80.leveldb</groupId>-->
+                <!--<artifactId>leveldb-api</artifactId>-->
+                <!--<version>0.7</version>-->
+            <!--</dependency>-->
+
+            <dependency>
+                <groupId>org.rocksdb</groupId>
+                <artifactId>rocksdbjni</artifactId>
+                <version>4.11.2</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -141,15 +159,6 @@
     </build>
 
     <distributionManagement>
-        <repository>
-            <id>aiaf-internal</id>
-            <name>Aiaf Release Repository</name>
-            <url>http://nexus.corp.fc18.com.cn/nexus/content/repositories/releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>aiaf-snapshot</id>
-            <name>Aiaf Snapshot Repository</name>
-            <url>http://nexus.corp.fc18.com.cn/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
+
     </distributionManagement>
 </project>

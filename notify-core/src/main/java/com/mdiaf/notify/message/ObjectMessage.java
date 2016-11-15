@@ -3,6 +3,8 @@ package com.mdiaf.notify.message;
 import com.mdiaf.notify.utils.SerializationUtil;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Created by Eason on 15/10/4.
@@ -41,6 +43,16 @@ public class ObjectMessage implements IMessage {
     @Override
     public byte[] toBytes() {
         return SerializationUtil.serialize(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ObjectMessage that = (ObjectMessage) o;
+
+        return Objects.equals(that.getHeader().getUniqueId(), this.getHeader().getUniqueId());
     }
 
 }

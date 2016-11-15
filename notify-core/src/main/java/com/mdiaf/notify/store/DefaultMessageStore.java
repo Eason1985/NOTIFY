@@ -34,53 +34,76 @@ public class DefaultMessageStore implements IMessageStore {
     }
 
     @Override
-    public void saveOrUpdate(IMessage message) throws SQLException {
+    public void saveOrUpdate(IMessage message) throws StoreException {
         MessageBean bean = new MessageBean(message.getHeader().getTopic(),
                 message.getHeader().getType(), message.getHeader().getGroupId(),
                 message.getHeader().getUniqueId(), message.toBytes());
         bean.setTableName(tableName);
 
-        MessageBean messageBean = bean.findByUniqueId(dataSource);
-        if (messageBean != null) {
-            bean.incTimes(dataSource);
-        } else {
-            bean.insert(dataSource);
+        try {
+            MessageBean messageBean;
+            messageBean = bean.findByUniqueId(dataSource);
+
+            if (messageBean != null) {
+                bean.incTimes(dataSource);
+            } else {
+                bean.insert(dataSource);
+            }
+        } catch (SQLException e) {
+            throw new StoreException(e);
         }
     }
 
     @Override
-    public List<IMessage> findMomentBefore(long seconds) throws SQLException {
+    public List<IMessage> findMomentBefore(long seconds) throws StoreException {
         MessageBean bean = new MessageBean();
         bean.setTableName(tableName);
-        List<IMessage> messages = new ArrayList<>();
-        List<MessageBean> messageBeanList = bean.findMomentBefore(seconds, dataSource);
-        for (MessageBean messageBean : messageBeanList) {
-            IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
-            MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
-            messages.add(wrapper);
+
+        try {
+            List<IMessage> messages = new ArrayList<>();
+            List<MessageBean> messageBeanList = bean.findMomentBefore(seconds, dataSource);
+            for (MessageBean messageBean : messageBeanList) {
+                IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
+                MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
+                messages.add(wrapper);
+            }
+            return messages;
+        }catch (SQLException e) {
+            throw new StoreException(e);
         }
-        return messages;
+
     }
 
     @Override
-    public List<IMessage> findMessages(String topic, String msgType, String groupId) throws SQLException {
+    public List<IMessage> findMessages(String topic, String msgType, String groupId) throws StoreException {
         MessageBean bean = new MessageBean(topic, msgType, groupId, null, null);
         bean.setTableName(tableName);
-        List<IMessage> messages = new ArrayList<>();
-        List<MessageBean> messageBeanList = bean.findMessages(dataSource);
-        for (MessageBean messageBean : messageBeanList) {
-            IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
-            MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
-            messages.add(wrapper);
+
+        try {
+            List<IMessage> messages = new ArrayList<>();
+            List<MessageBean> messageBeanList = bean.findMessages(dataSource);
+            for (MessageBean messageBean : messageBeanList) {
+                IMessage message = (IMessage) SerializationUtil.deserialize(messageBean.getMessage());
+                MessageWrapper wrapper = new MessageWrapper(message, messageBean.getTimes(), messageBean.getCreateTime());
+                messages.add(wrapper);
+            }
+            return messages;
+        }catch (SQLException e) {
+            throw new StoreException(e);
         }
-        return messages;
+
     }
 
     @Override
-    public void deleteByUniqueId(String uniqueId) throws SQLException {
-        MessageBean bean = new MessageBean(null, null, null, uniqueId, null);
-        bean.setTableName(tableName);
-        bean.deleteByUniqueId(dataSource);
+    public void deleteByUniqueId(String uniqueId) throws StoreException {
+        try {
+            MessageBean bean = new MessageBean(null, null, null, uniqueId, null);
+            bean.setTableName(tableName);
+            bean.deleteByUniqueId(dataSource);
+        }catch (SQLException e) {
+            throw new StoreException(e);
+        }
+
     }
 
     private void init() {

@@ -2,6 +2,8 @@ package com.mdiaf.notify.message;
 
 import com.mdiaf.notify.utils.SerializationUtil;
 
+import java.util.Objects;
+
 /**
  * Created by Eason on 15/10/4.
  */
@@ -36,4 +38,15 @@ public class BytesMessage implements IMessage {
     public void setHeader(MessageHeader header) {
         this.header = header;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BytesMessage that = (BytesMessage) o;
+
+        return Objects.equals(that.getHeader().getUniqueId(), this.getHeader().getUniqueId());
+    }
+
 }

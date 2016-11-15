@@ -3,6 +3,8 @@ package com.mdiaf.notify.store;
 import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.message.MessageHeader;
 
+import java.util.Objects;
+
 /**
  * Created by Eason on 15/11/28.
  */
@@ -51,4 +53,15 @@ public class MessageWrapper implements IMessageWrapper {
     public IMessage getIMessage() {
         return message;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MessageWrapper that = (MessageWrapper) o;
+
+        return Objects.equals(that.getHeader().getUniqueId(), this.getHeader().getUniqueId());
+    }
+
 }

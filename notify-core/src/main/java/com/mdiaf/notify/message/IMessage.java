@@ -33,4 +33,5 @@ public interface IMessage extends Serializable {
 
     //todo  extension property, just like org.springframework.amqp.core.MessageProperties
 //    MessageProperties getMessageProperties();
+
 }

@@ -4,6 +4,8 @@ import com.mdiaf.notify.utils.SerializationUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Created by Eason on 15/10/4.
@@ -67,4 +69,15 @@ public class StringMessage implements IMessage {
     public String getCharset() {
         return charset;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StringMessage that = (StringMessage) o;
+
+        return Objects.equals(that.getHeader().getUniqueId(), this.getHeader().getUniqueId());
+    }
+
 }

@@ -7,6 +7,7 @@ import com.mdiaf.notify.message.IMessage;
 import com.mdiaf.notify.store.IMessageStore;
 import com.mdiaf.notify.store.MessageStoreManager;
 import com.mdiaf.notify.store.MessageWrapper;
+import com.mdiaf.notify.store.StoreException;
 import com.mdiaf.notify.utils.IPUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
             messageStore.saveOrUpdate(message);
             channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
             channel.send(message, topic, messageType);
-        } catch (SQLException e) {
+        } catch (StoreException e) {
             throw new IOException("[NOTIFY]message local store fault.", e);
         } finally {
             if (channel != null) {
@@ -64,7 +65,7 @@ public final class RabbitMessageSender implements IMessageSender, InitializingBe
             messageStore.saveOrUpdate(message);
             channel = RabbitChannel.getOrCreate(connectionFactory.createConnection(), configuration);
             channel.expireSend(message, topic, messageType, delay);
-        } catch (SQLException e) {
+        } catch (StoreException e) {
             throw new IOException("[NOTIFY]message local store fault.", e);
         } finally {
             if (channel != null) {

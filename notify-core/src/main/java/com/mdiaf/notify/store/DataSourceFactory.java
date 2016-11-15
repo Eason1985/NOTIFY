@@ -1,6 +1,8 @@
 package com.mdiaf.notify.store;
 
 import com.mdiaf.notify.conf.Configuration;
+import com.mdiaf.notify.store.mysql.MysqlDataSource;
+import com.mdiaf.notify.store.sqlite.SqliteDataSource;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -18,26 +20,30 @@ public enum DataSourceFactory {
 
     private final static Map<String, IDataSource> dataSourceHolder = new HashMap<>();
 
-    public IDataSource getOrCreate(String mode, String name) throws SQLException {
+    public IDataSource getOrCreate(Configuration configuration, String name) throws SQLException {
         synchronized (dataSourceHolder) {
             if (dataSourceHolder.containsKey(name)) {
                 return dataSourceHolder.get(name);
             }
 
-            IDataSource sqliteDataSource = create(mode, name);
-            dataSourceHolder.put(mode + "_" + name, sqliteDataSource);
+            IDataSource sqliteDataSource = create(configuration, name);
+            dataSourceHolder.put(configuration.getMode() + "_" + name, sqliteDataSource);
             return sqliteDataSource;
         }
     }
 
-    private IDataSource create(String mode, String name) throws SQLException {
-        if (StringUtils.isBlank(mode) || Configuration.MODE_LOCAL.equalsIgnoreCase(mode)) {
+    private IDataSource create(Configuration configuration, String name) throws SQLException {
+        if (StringUtils.isBlank(configuration.getMode()) || Configuration.MODE_LOCAL.equalsIgnoreCase(configuration.getMode())) {
             checkOrCreatePath(STORE_LOCAL_PATH);
             String url = "jdbc:sqlite:" + STORE_LOCAL_PATH + "/" + name + ".db";
             return new SqliteDataSource(url);
         }
 
-        throw new RuntimeException("No support mode: " + mode + " yet");
+        if (Configuration.MODE_REMOTE.equalsIgnoreCase(configuration.getMode())) {
+            return new MysqlDataSource(configuration);
+        }
+
+        throw new RuntimeException("No support mode: " + configuration.getMode() + " yet");
     }
 
     private void checkOrCreatePath(String url) {

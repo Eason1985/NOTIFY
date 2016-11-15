@@ -53,5 +53,20 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.iq80.leveldb</groupId>-->
+            <!--<artifactId>leveldb</artifactId>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.iq80.leveldb</groupId>-->
+            <!--<artifactId>leveldb-api</artifactId>-->
+        <!--</dependency>-->
+
+        <dependency>
+            <groupId>org.rocksdb</groupId>
+            <artifactId>rocksdbjni</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

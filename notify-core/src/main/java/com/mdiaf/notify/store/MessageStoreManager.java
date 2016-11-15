@@ -32,7 +32,12 @@ public class MessageStoreManager {
     }
 
     private static IMessageStore create(Configuration configuration, String name) throws SQLException {
-        IDataSource sqliteDataSource = DataSourceFactory.INSTANCE.getOrCreate(configuration.getMode(), name);
+        IDataSource sqliteDataSource = DataSourceFactory.INSTANCE.getOrCreate(configuration, name);
+        return new DefaultMessageStore(sqliteDataSource, name);
+    }
+
+    private static IMessageStore create0(Configuration configuration, String name) throws SQLException {
+        IDataSource sqliteDataSource = DataSourceFactory.INSTANCE.getOrCreate(configuration, name);
         return new DefaultMessageStore(sqliteDataSource, name);
     }
 }

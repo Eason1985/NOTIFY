@@ -2,6 +2,7 @@ package com.mdiaf.notify.sender;
 
 import com.mdiaf.notify.store.IMessageStore;
 import com.mdiaf.notify.store.LocalStoreException;
+import com.mdiaf.notify.store.StoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +26,8 @@ public class LocalStoreConfirmListener implements IConfirmListener {
         try {
             messageStore.deleteByUniqueId(msgUnique);
             // if handleAck fault,we will resend this message again by a timer.
-        } catch (SQLException e) {
-            logger.warn("[NOTIFY]handleAck fault.cause:" + e.getErrorCode(), e);
+        } catch (StoreException e) {
+            logger.warn("[NOTIFY]handleAck fault.cause:" , e);
             throw new LocalStoreException(e);
         }
     }

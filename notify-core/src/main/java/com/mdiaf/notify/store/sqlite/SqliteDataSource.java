@@ -1,5 +1,6 @@
-package com.mdiaf.notify.store;
+package com.mdiaf.notify.store.sqlite;
 
+import com.mdiaf.notify.store.IDataSource;
 import org.sqlite.SQLiteDataSource;
 
 import java.sql.Connection;
